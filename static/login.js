@@ -38,9 +38,17 @@ function handleLogin() {
     btn.disabled = true;
     btn.textContent = "Signing In...";
 
-    apiPost("/api/auth/login", {
-        email: email,
-        password: password
+    var url = API_BASE + "/api/auth/login";
+
+    fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email, password: password })
+    }).then(function(response) {
+        if (!response.ok) {
+            throw new Error("Login failed: " + response.status);
+        }
+        return response.json();
     }).then(function(data) {
         if (data.access_token) {
             localStorage.setItem("token", data.access_token);
@@ -52,6 +60,7 @@ function handleLogin() {
             btn.textContent = "Sign In";
         }
     }).catch(function(err) {
+        console.log("Login error:", err);
         showToast("Invalid email or password", "error");
         btn.disabled = false;
         btn.textContent = "Sign In";
@@ -79,10 +88,17 @@ function handleRegister() {
     btn.disabled = true;
     btn.textContent = "Creating Account...";
 
-    apiPost("/api/auth/register", {
-        full_name: name,
-        email: email,
-        password: password
+    var url = API_BASE + "/api/auth/register";
+
+    fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ full_name: name, email: email, password: password })
+    }).then(function(response) {
+        if (!response.ok) {
+            throw new Error("Registration failed: " + response.status);
+        }
+        return response.json();
     }).then(function(data) {
         if (data.access_token) {
             localStorage.setItem("token", data.access_token);
@@ -94,6 +110,7 @@ function handleRegister() {
             btn.textContent = "Create Account";
         }
     }).catch(function(err) {
+        console.log("Register error:", err);
         showToast("Email already registered or server error", "error");
         btn.disabled = false;
         btn.textContent = "Create Account";
@@ -103,7 +120,21 @@ function handleRegister() {
 // ==================== LOAD USER INFO ====================
 
 function loadUserInfo() {
-    apiGet("/api/auth/me").then(function(user) {
+    var url = API_BASE + "/api/auth/me";
+    var token = localStorage.getItem("token");
+
+    fetch(url, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + token
+        }
+    }).then(function(response) {
+        if (!response.ok) {
+            throw new Error("Failed to load user");
+        }
+        return response.json();
+    }).then(function(user) {
         if (user && user.id) {
             window.currentUser = user;
             document.getElementById("avatarLetter").textContent = user.full_name.charAt(0).toUpperCase();
@@ -116,7 +147,8 @@ function loadUserInfo() {
 
             loadFamilies();
         }
-    }).catch(function() {
+    }).catch(function(err) {
+        console.log("User load error:", err);
         localStorage.removeItem("token");
         document.getElementById("authScreen").style.display = "block";
         document.getElementById("appScreen").style.display = "none";

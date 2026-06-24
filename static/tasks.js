@@ -1,91 +1,116 @@
-/*
- * tasks.js
- * Mobile-optimized task list.
- */
-function renderTasks(container) {
-    API.get('/tasks/' + currentFamilyId)
-        .then(function(tasks) {
-            var pending = [], done = [];
-            for (var x = 0; x < tasks.length; x++) {
-                if (tasks[x].status === 'done') done.push(tasks[x]);
-                else pending.push(tasks[x]);
-            }
-            var html = '';
-            html += '<div class="page-header"><div><h1 class="page-title">Tasks</h1><p class="page-subtitle">' + pending.length + ' pending, ' + done.length + ' done</p></div><button class="btn btn-primary" onclick="openAddTask()">+ New Task</button></div>';
-
-            html += '<div class="list-card" style="margin-bottom:16px;"><h3>\u{1F4CC} Pending (' + pending.length + ')</h3>';
-            if (pending.length > 0) {
-                for (var i = 0; i < pending.length; i++) {
-                    var t = pending[i];
-                    var meta = '';
-                    if (t.assigned_to) meta += '\u{1F464} ' + t.assigned_to;
-                    if (t.due_date && t.due_date !== 'None') meta += (meta ? ' &bull; ' : '') + '\u{1F4C5} ' + t.due_date;
-                    html += '<div class="list-item" style="animation-delay:' + (i * 0.04) + 's">';
-                    html += '<button class="item-check" onclick="markTaskDone(' + t.id + ')">&#10003;</button>';
-                    html += '<div class="item-info"><div class="item-title">' + t.title + '</div>';
-                    if (meta) html += '<div class="item-meta">' + meta + '</div>';
-                    html += '</div>';
-                    html += '<span class="badge badge-' + t.priority + '">' + t.priority + '</span>';
-                    html += '<button class="btn-delete" onclick="deleteTask(' + t.id + ')">&#128465;</button>';
-                    html += '</div>';
-                }
-            } else {
-                html += '<div class="empty-state"><p>No pending tasks!</p></div>';
-            }
-            html += '</div>';
-
-            if (done.length > 0) {
-                html += '<div class="list-card"><h3>\u2705 Done (' + done.length + ')</h3>';
-                for (var j = 0; j < done.length; j++) {
-                    var d = done[j];
-                    html += '<div class="list-item" style="opacity:0.5;">';
-                    html += '<button class="item-check checked" onclick="markTaskPending(' + d.id + ')">&#10003;</button>';
-                    html += '<div class="item-info"><div class="item-title" style="text-decoration:line-through;">' + d.title + '</div></div>';
-                    html += '<button class="btn-delete" onclick="deleteTask(' + d.id + ')">&#128465;</button>';
-                    html += '</div>';
-                }
-                html += '</div>';
-            }
-            container.innerHTML = html;
-        })
-        .catch(function() { container.innerHTML = '<div class="empty-state"><p>Failed to load</p></div>'; });
-}
+// ==================== TASKS ====================
 
 function openAddTask() {
-    showModal(
-        '<h3>New Task</h3>' +
-        '<div class="form-group"><label>What needs to be done?</label><input type="text" id="task-title" placeholder="e.g., Pay electricity bill"></div>' +
-        '<div class="form-group"><label>Priority</label><select id="task-priority"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option></select></div>' +
-        '<div class="form-group"><label>Due Date (optional)</label><input type="date" id="task-due"></div>' +
-        '<div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="submitTask()">Create</button></div>'
-    );
+    openModal("addTaskModal");
 }
 
-function submitTask() {
-    var title = document.getElementById('task-title').value.trim();
-    var priority = document.getElementById('task-priority').value;
-    var due = document.getElementById('task-due').value;
-    if (!title) { showToast('Enter a task title', 'error'); return; }
-    API.post('/tasks', { family_id: currentFamilyId, title: title, priority: priority, due_date: due || null })
-        .then(function() { closeModal(); showToast('Task created!'); navigateTo('tasks'); })
-        .catch(function(error) { showToast(error.message, 'error'); });
+function saveTask() {
+    var title = document.getElementById("taskTitle").value.trim();
+    var priority = document.getElementById("taskPriority").value;
+    var dueDate = document.getElementById("taskDue").value;
+
+    if (!title) {
+        showToast("Enter a task title", "warning");
+        return;
+    }
+
+    apiPost("/api/tasks", {
+        family_id: window.currentFamilyId,
+        title: title,
+        priority: priority,
+        due_date: dueDate || null
+    }).then(function(data) {
+        showToast("Task created!", "success");
+        closeModal("addTaskModal");
+        document.getElementById("taskTitle").value = "";
+        document.getElementById("taskDue").value = "";
+        loadTasks();
+    }).catch(function(err) {
+        showToast("Failed to create task", "error");
+    });
 }
 
-function markTaskDone(id) {
-    API.put('/tasks/' + id, { status: 'done' })
-        .then(function() { showToast('Done!'); navigateTo('tasks'); })
-        .catch(function(error) { showToast(error.message, 'error'); });
+function loadTasks() {
+    if (!window.currentFamilyId) return;
+
+    apiGet("/api/tasks/" + window.currentFamilyId).then(function(tasks) {
+        renderTaskList(tasks);
+    }).catch(function(err) {
+        console.log("Tasks load error:", err);
+    });
 }
 
-function markTaskPending(id) {
-    API.put('/tasks/' + id, { status: 'pending' })
-        .then(function() { navigateTo('tasks'); })
-        .catch(function(error) { showToast(error.message, 'error'); });
+function renderTaskList(tasks) {
+    var container = document.getElementById("taskList");
+    if (!container) return;
+
+    if (!tasks || tasks.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">✅</div><h3>No tasks</h3><p>Create your first task</p></div>';
+        return;
+    }
+
+    var pending = [];
+    var done = [];
+
+    for (var i = 0; i < tasks.length; i++) {
+        if (tasks[i].status === "done") {
+            done.push(tasks[i]);
+        } else {
+            pending.push(tasks[i]);
+        }
+    }
+
+    var html = "";
+
+    // Pending tasks
+    for (var j = 0; j < pending.length; j++) {
+        var t = pending[j];
+        html += '<div class="task-item">';
+        html += '<div class="task-priority ' + t.priority + '"></div>';
+        html += '<div class="task-item-info">';
+        html += '<div class="task-item-title">' + escapeHtml(t.title) + '</div>';
+        html += '<div class="task-item-meta">';
+        html += t.priority.charAt(0).toUpperCase() + t.priority.slice(1) + ' priority';
+        if (t.due_date) html += ' · Due: ' + t.due_date;
+        if (t.assigned_to) html += ' · ' + escapeHtml(t.assigned_to);
+        html += '</div></div>';
+        html += '<div class="task-item-actions">';
+        html += '<button class="task-btn" onclick="toggleTask(' + t.id + ', \'done\')">✅</button>';
+        html += '<button class="task-btn" onclick="deleteTask(' + t.id + ')">🗑️</button>';
+        html += '</div></div>';
+    }
+
+    // Done tasks
+    for (var k = 0; k < done.length; k++) {
+        var d = done[k];
+        html += '<div class="task-item done">';
+        html += '<div class="task-priority low"></div>';
+        html += '<div class="task-item-info">';
+        html += '<div class="task-item-title">' + escapeHtml(d.title) + '</div>';
+        html += '<div class="task-item-meta">Completed</div>';
+        html += '</div>';
+        html += '<div class="task-item-actions">';
+        html += '<button class="task-btn" onclick="toggleTask(' + d.id + ', \'pending\')">↩️</button>';
+        html += '<button class="task-btn" onclick="deleteTask(' + d.id + ')">🗑️</button>';
+        html += '</div></div>';
+    }
+
+    container.innerHTML = html;
 }
 
-function deleteTask(id) {
-    if (!confirm('Delete?')) return;
-    API.del('/tasks/' + id)
-        .then(function() { showToast('Deleted'); navigateTo('tasks'); })
-        .catch(function(error) { showToast(error.message, 'error'); });
+function toggleTask(taskId, status) {
+    apiPut("/api/tasks/" + taskId, { status: status }).then(function() {
+        loadTasks();
+    }).catch(function(err) {
+        showToast("Failed to update task", "error");
+    });
+}
+
+function deleteTask(taskId) {
+    apiDelete("/api/tasks/" + taskId).then(function() {
+        showToast("Task deleted", "info");
+        loadTasks();
+    }).catch(function(err) {
+        showToast("Failed to delete", "error");
+    });
 }

@@ -1,47 +1,82 @@
-/*
- * medicines.js
- * Track medicine schedules for family members.
- */
-function renderMedicines(container) {
-    API.get('/medicines/' + currentFamilyId)
-        .then(function(meds) {
-            var html = '';
-            html += '<div class="page-header"><div><h1 class="page-title">Medicines</h1><p class="page-subtitle">' + meds.length + ' active</p></div><button class="btn btn-primary" onclick="openAddMedicine()">+ Add Medicine</button></div>';
-            if (meds.length > 0) {
-                html += '<div class="list-card"><h3>\u{1F48A} Active Medicines</h3>';
-                for (var i = 0; i < meds.length; i++) {
-                    var m = meds[i];
-                    var t = m.time ? ' &bull; \u23F0 ' + m.time : '';
-                    html += '<div class="list-item" style="animation-delay:' + (i * 0.05) + 's"><div class="item-icon" style="background:rgba(244,63,94,0.15);">\u{1F48A}</div><div class="item-info"><div class="item-title">' + m.medicine_name + '</div><div class="item-meta">\u{1F464} ' + m.person_name + ' &bull; ' + (m.dosage || 'No dosage') + ' &bull; ' + m.frequency + t + '</div></div><button class="btn-delete" onclick="deleteMedicine(' + m.id + ')">\u{1F5D1}</button></div>';
-                }
-                html += '</div>';
-            } else {
-                html += '<div class="empty-state"><p>No medicines tracked yet</p><button class="btn btn-primary" onclick="openAddMedicine()">Add Medicine</button></div>';
-            }
-            container.innerHTML = html;
-        })
-        .catch(function() { container.innerHTML = '<div class="empty-state"><p>Failed to load</p></div>'; });
+// ==================== MEDICINES ====================
+
+function openAddMed() {
+    openModal("addMedModal");
 }
 
-function openAddMedicine() {
-    showModal('<h3>Add Medicine</h3><div class="form-group"><label>Person Name</label><input type="text" id="med-person" placeholder="e.g., Dad, Mom"></div><div class="form-group"><label>Medicine Name</label><input type="text" id="med-name" placeholder="e.g., Metformin 500mg"></div><div class="form-group"><label>Dosage</label><input type="text" id="med-dosage" placeholder="e.g., 1 tablet"></div><div class="form-group"><label>Frequency</label><select id="med-frequency"><option value="daily">Once Daily</option><option value="twice_daily">Twice Daily</option><option value="thrice_daily">Thrice Daily</option><option value="weekly">Weekly</option></select></div><div class="form-group"><label>Time</label><input type="time" id="med-time"></div><div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="submitMedicine()">Add</button></div>');
+function saveMed() {
+    var person = document.getElementById("medPerson").value.trim();
+    var name = document.getElementById("medName").value.trim();
+    var dosage = document.getElementById("medDosage").value.trim();
+    var frequency = document.getElementById("medFreq").value;
+    var time = document.getElementById("medTime").value;
+
+    if (!person || !name) {
+        showToast("Enter person and medicine name", "warning");
+        return;
+    }
+
+    apiPost("/api/medicines", {
+        family_id: window.currentFamilyId,
+        person_name: person,
+        medicine_name: name,
+        dosage: dosage,
+        frequency: frequency,
+        time: time
+    }).then(function(data) {
+        showToast("Medicine added!", "success");
+        closeModal("addMedModal");
+        document.getElementById("medPerson").value = "";
+        document.getElementById("medName").value = "";
+        document.getElementById("medDosage").value = "";
+        loadMedicines();
+    }).catch(function(err) {
+        showToast("Failed to add medicine", "error");
+    });
 }
 
-function submitMedicine() {
-    var person = document.getElementById('med-person').value.trim();
-    var name = document.getElementById('med-name').value.trim();
-    var dosage = document.getElementById('med-dosage').value.trim();
-    var frequency = document.getElementById('med-frequency').value;
-    var time = document.getElementById('med-time').value;
-    if (!person || !name) { showToast('Fill in person and medicine name', 'error'); return; }
-    API.post('/medicines', { family_id: currentFamilyId, person_name: person, medicine_name: name, dosage: dosage || null, frequency: frequency, time: time || null })
-        .then(function() { closeModal(); showToast('Added!'); navigateTo('medicines'); })
-        .catch(function(error) { showToast(error.message, 'error'); });
+function loadMedicines() {
+    if (!window.currentFamilyId) return;
+
+    apiGet("/api/medicines/" + window.currentFamilyId).then(function(meds) {
+        renderMedList(meds);
+    }).catch(function(err) {
+        console.log("Medicines load error:", err);
+    });
 }
 
-function deleteMedicine(id) {
-    if (!confirm('Remove?')) return;
-    API.del('/medicines/' + id)
-        .then(function() { showToast('Removed'); navigateTo('medicines'); })
-        .catch(function(error) { showToast(error.message, 'error'); });
+function renderMedList(meds) {
+    var container = document.getElementById("medList");
+    if (!container) return;
+
+    if (!meds || meds.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">💊</div><h3>No medicines</h3><p>Add a medicine to track</p></div>';
+        return;
+    }
+
+    var html = "";
+    for (var i = 0; i < meds.length; i++) {
+        var m = meds[i];
+        html += '<div class="med-item">';
+        html += '<div class="med-item-info">';
+        html += '<div class="med-item-person">' + escapeHtml(m.person_name) + '</div>';
+        html += '<div class="med-item-name">' + escapeHtml(m.medicine_name) + '</div>';
+        html += '<div class="med-item-details">';
+        if (m.dosage) html += escapeHtml(m.dosage);
+        if (m.frequency) html += ' · ' + escapeHtml(m.frequency);
+        if (m.time) html += ' · ' + m.time;
+        html += '</div></div>';
+        html += '<button class="med-item-delete" onclick="deleteMed(' + m.id + ')">🗑️</button>';
+        html += '</div>';
+    }
+    container.innerHTML = html;
+}
+
+function deleteMed(medId) {
+    apiDelete("/api/medicines/" + medId).then(function() {
+        showToast("Medicine deleted", "info");
+        loadMedicines();
+    }).catch(function(err) {
+        showToast("Failed to delete", "error");
+    });
 }

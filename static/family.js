@@ -1,77 +1,123 @@
-/*
- * family.js
- * View family members, invite codes, manage family.
- */
-function renderFamily(container) {
-    Promise.all([
-        API.get('/families'),
-        API.get('/families/' + currentFamilyId + '/members')
-    ]).then(function(results) {
-        var families = results[0];
-        var members = results[1];
-        var fam = null;
-        for (var f = 0; f < families.length; f++) {
-            if (families[f].id === currentFamilyId) { fam = families[f]; break; }
-        }
-        var html = '';
-        html += '<div class="page-header"><div><h1 class="page-title">' + (fam ? fam.name : 'My Family') + '</h1><p class="page-subtitle">' + members.length + ' members</p></div></div>';
-        html += '<div class="stat-card" style="margin-bottom:24px;text-align:center;">';
-        html += '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:8px;">Family Invite Code</div>';
-        html += '<div style="font-family:Space Grotesk,sans-serif;font-size:36px;font-weight:700;letter-spacing:4px;color:var(--primary-light);margin-bottom:12px;">' + (fam ? fam.invite_code : '------') + '</div>';
-        html += '<button class="btn btn-secondary btn-sm" onclick="copyCode()">Copy Code</button>';
-        html += '<p style="font-size:12px;color:var(--text-muted);margin-top:12px;">Share this code so others can join</p>';
-        html += '</div>';
-        html += '<div class="list-card"><h3>Members</h3>';
-        for (var i = 0; i < members.length; i++) {
-            var m = members[i];
-            html += '<div class="list-item" style="animation-delay:' + (i * 0.05) + 's"><div class="user-avatar" style="background:' + (m.color || '#6366F1') + '">' + m.name.charAt(0).toUpperCase() + '</div><div class="item-info"><div class="item-title">' + m.name + '</div><div class="item-meta">' + m.email + '</div></div><span class="badge badge-' + (m.role === 'admin' ? 'pending' : 'low') + '">' + m.role + '</span></div>';
-        }
-        html += '</div>';
-        html += '<div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap;">';
-        html += '<button class="btn btn-secondary" onclick="showJoinFamily()">Join Another Family</button>';
-        html += '<button class="btn btn-secondary" onclick="showCreateFamily()">Create New Family</button>';
-        html += '</div>';
-        container.innerHTML = html;
-    }).catch(function() {
-        container.innerHTML = '<div class="empty-state"><p>Failed to load</p></div>';
+// ==================== FAMILY ====================
+
+function openCreateFamily() {
+    openModal("createFamilyModal");
+}
+
+function openJoinFamily() {
+    openModal("joinFamilyModal");
+}
+
+function createFamily() {
+    var name = document.getElementById("familyName").value.trim();
+
+    if (!name) {
+        showToast("Enter a family name", "warning");
+        return;
+    }
+
+    apiPost("/api/families", { name: name }).then(function(data) {
+        showToast("Family created!", "success");
+        closeModal("createFamilyModal");
+        document.getElementById("familyName").value = "";
+        loadFamilies();
+    }).catch(function(err) {
+        showToast("Failed to create family", "error");
     });
 }
 
-function copyCode() {
-    API.get('/families').then(function(fams) {
-        for (var i = 0; i < fams.length; i++) {
-            if (fams[i].id === currentFamilyId) {
-                if (navigator.clipboard) {
-                    navigator.clipboard.writeText(fams[i].invite_code).then(function() { showToast('Copied!'); });
-                } else {
-                    showToast('Code: ' + fams[i].invite_code);
-                }
-                return;
-            }
-        }
+function joinFamily() {
+    var code = document.getElementById("joinCode").value.trim();
+
+    if (!code) {
+        showToast("Enter an invite code", "warning");
+        return;
+    }
+
+    apiPost("/api/families/join", { invite_code: code }).then(function(data) {
+        showToast(data.message || "Joined!", "success");
+        closeModal("joinFamilyModal");
+        document.getElementById("joinCode").value = "";
+        loadFamilies();
+    }).catch(function(err) {
+        showToast("Invalid invite code", "error");
     });
 }
 
-function showJoinFamily() {
-    showModal('<h3>Join a Family</h3><div class="form-group"><label>Invite Code</label><input type="text" id="join-code" placeholder="Enter code" style="text-transform:uppercase;letter-spacing:2px;"></div><div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="submitJoinFamily()">Join</button></div>');
+function loadFamilyPage() {
+    if (!window.currentFamilyId) return;
+
+    // Load members
+    apiGet("/api/families/" + window.currentFamilyId + "/members").then(function(members) {
+        renderMembersList(members);
+    }).catch(function(err) {
+        console.log("Members load error:", err);
+    });
+
+    // Find current family info
+    var currentFamily = null;
+    for (var i = 0; i < window.families.length; i++) {
+        if (window.families[i].id === window.currentFamilyId) {
+            currentFamily = window.families[i];
+            break;
+        }
+    }
+
+    if (currentFamily) {
+        renderFamilyInfo(currentFamily);
+    }
 }
 
-function submitJoinFamily() {
-    var code = document.getElementById('join-code').value.trim();
-    if (!code) return;
-    API.post('/families/join', { invite_code: code })
-        .then(function(result) { closeModal(); currentFamilyId = result.family_id; showToast(result.message); navigateTo('family'); })
-        .catch(function(error) { showToast(error.message, 'error'); });
+function renderFamilyInfo(family) {
+    var container = document.getElementById("familyInfo");
+    if (!container) return;
+
+    var html = '<h2>' + escapeHtml(family.name) + '</h2>';
+    html += '<p>Invite Code:</p>';
+    html += '<div class="invite-code">' + escapeHtml(family.invite_code) + '</div>';
+    html += '<br><button class="copy-btn" onclick="copyInviteCode(\'' + escapeHtml(family.invite_code) + '\')">📋 Copy Code</button>';
+    container.innerHTML = html;
 }
 
-function showCreateFamily() {
-    showModal('<h3>Create a Family</h3><div class="form-group"><label>Family Name</label><input type="text" id="new-family-name" placeholder="e.g., The Johnsons"></div><div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="submitCreateFamily()">Create</button></div>');
+function renderMembersList(members) {
+    var container = document.getElementById("membersList");
+    if (!container) return;
+
+    if (!members || members.length === 0) {
+        container.innerHTML = '<div class="empty-state"><p>No members yet</p></div>';
+        return;
+    }
+
+    var colors = ["#6366f1", "#10b981", "#f59e0b", "#f43f5e", "#0ea5e9", "#a78bfa"];
+
+    var html = "";
+    for (var i = 0; i < members.length; i++) {
+        var m = members[i];
+        var color = colors[i % colors.length];
+        var initial = m.name.charAt(0).toUpperCase();
+
+        html += '<div class="member-item">';
+        html += '<div class="member-avatar" style="background:' + color + '">' + initial + '</div>';
+        html += '<div class="member-info">';
+        html += '<div class="member-name">' + escapeHtml(m.name) + '</div>';
+        html += '<div class="member-role">' + escapeHtml(m.role) + ' · ' + escapeHtml(m.email) + '</div>';
+        html += '</div></div>';
+    }
+    container.innerHTML = html;
 }
 
-function submitCreateFamily() {
-    var name = document.getElementById('new-family-name').value.trim();
-    if (!name) return;
-    API.post('/families', { name: name })
-        .then(function(result) { closeModal(); currentFamilyId = result.id; showToast('Created! Code: ' + result.invite_code); navigateTo('family'); })
-        .catch(function(error) { showToast(error.message, 'error'); });
+function copyInviteCode(code) {
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(code).then(function() {
+            showToast("Invite code copied!", "success");
+        });
+    } else {
+        var textArea = document.createElement("textarea");
+        textArea.value = code;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textArea);
+        showToast("Invite code copied!", "success");
+    }
 }

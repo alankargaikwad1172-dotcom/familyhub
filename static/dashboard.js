@@ -1,75 +1,151 @@
-/*
- * dashboard.js
- * Shows the family overview: stats, charts, recent activity, goals.
- */
-function renderDashboard(container) {
-    if (!currentFamilyId) {
-        container.innerHTML = '<div class="empty-state"><div class="empty-icon">&#128104;</div><p>Create or join a family first</p></div>';
-        return;
-    }
-    API.get('/dashboard/' + currentFamilyId)
-        .then(function(data) {
-            var html = '';
-            html += '<div class="page-header"><div><h1 class="page-title">Dashboard</h1><p class="page-subtitle">Your family at a glance</p></div></div>';
+// ==================== DASHBOARD ====================
 
-            html += '<div class="stats-grid">';
-            html += makeStatCard('\u{1F4B0}', 'rgba(99,102,241,0.15)', 'Monthly Expenses', formatMoney(data.monthly_expenses));
-            html += makeStatCard('\u{1F6D2}', 'rgba(16,185,129,0.15)', 'Shopping Items', data.shopping_items);
-            html += makeStatCard('\u2705', 'rgba(245,158,11,0.15)', 'Pending Tasks', data.pending_tasks);
-            html += makeStatCard('\u{1F48A}', 'rgba(244,63,94,0.15)', 'Active Medicines', data.active_medicines);
-            html += '</div>';
+var categoryChart = null;
 
-            html += '<div class="content-grid">';
-            html += '<div class="chart-card"><h3>\u{1F4CA} Spending by Category</h3><canvas id="expense-chart" height="250"></canvas></div>';
+function loadDashboard() {
+    if (!window.currentFamilyId) return;
 
-            html += '<div class="list-card"><h3>\u{1F550} Recent Expenses</h3>';
-            if (data.recent_expenses.length > 0) {
-                for (var i = 0; i < data.recent_expenses.length; i++) {
-                    var e = data.recent_expenses[i];
-                    var c = categoryColors[e.category] || '#9CA3AF';
-                    var ic = categoryIcons[e.category] || '\u{1F4E6}';
-                    html += '<div class="list-item"><div class="item-icon" style="background:' + c + '22;">' + ic + '</div><div class="item-info"><div class="item-title">' + e.title + '</div><div class="item-meta">' + e.category + ' &bull; ' + getRelativeDate(e.date) + '</div></div><div class="item-value" style="color:' + c + '">' + formatMoney(e.amount) + '</div></div>';
-                }
-            } else {
-                html += '<div class="empty-state"><p>No expenses yet</p></div>';
-            }
-            html += '</div>';
+    apiGet("/api/dashboard/" + window.currentFamilyId).then(function(data) {
+        // Update stat cards
+        document.getElementById("statExpenses").textContent = "₹" + formatNumber(data.monthly_expenses);
+        document.getElementById("statShopping").textContent = data.shopping_items;
+        document.getElementById("statTasks").textContent = data.pending_tasks;
+        document.getElementById("statMeds").textContent = data.active_medicines;
 
-            html += '<div class="list-card full-width"><h3>\u{1F3AF} Family Goals</h3>';
-            if (data.goals.length > 0) {
-                for (var j = 0; j < data.goals.length; j++) {
-                    var g = data.goals[j];
-                    html += '<div class="goal-card"><div class="goal-header"><div class="goal-title"><span style="font-size:24px;">\u{1F3AF}</span><span>' + g.title + '</span></div><span class="badge badge-pending">' + g.progress + '%</span></div><div class="progress-bar"><div class="progress-fill emerald" style="width:' + Math.min(g.progress, 100) + '%"></div></div><div class="goal-amounts"><span>' + formatMoney(g.saved) + ' saved</span><span>Target: ' + formatMoney(g.target) + '</span></div></div>';
-                }
-            } else {
-                html += '<div class="empty-state"><p>No goals yet</p></div>';
-            }
-            html += '</div></div>';
+        // Render chart
+        renderCategoryChart(data.categories);
 
-            container.innerHTML = html;
+        // Render recent expenses
+        renderRecentExpenses(data.recent_expenses);
 
-            if (data.categories.length > 0) {
-                var canvas = document.getElementById('expense-chart');
-                if (canvas) {
-                    var labels = [], values = [], colors = [];
-                    for (var k = 0; k < data.categories.length; k++) {
-                        labels.push(data.categories[k].name);
-                        values.push(data.categories[k].total);
-                        colors.push(categoryColors[data.categories[k].name] || '#9CA3AF');
-                    }
-                    new Chart(canvas, {
-                        type: 'doughnut',
-                        data: { labels: labels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 0, spacing: 3, borderRadius: 6 }] },
-                        options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', padding: 16, usePointStyle: true, font: { family: 'Inter', size: 12 } } } } }
-                    });
-                }
-            }
-        })
-        .catch(function() {
-            container.innerHTML = '<div class="empty-state"><p>Could not load dashboard</p></div>';
-        });
+        // Render goals
+        renderDashboardGoals(data.goals);
+    }).catch(function(err) {
+        console.log("Dashboard load error:", err);
+    });
 }
 
-function makeStatCard(icon, bg, label, value) {
-    return '<div class="stat-card"><div class="stat-icon" style="background:' + bg + ';">' + icon + '</div><div class="stat-label">' + label + '</div><div class="stat-value">' + value + '</div></div>';
+function renderCategoryChart(categories) {
+    var canvas = document.getElementById("categoryChart");
+    if (!canvas) return;
+
+    var ctx = canvas.getContext("2d");
+
+    if (categoryChart) {
+        categoryChart.destroy();
+    }
+
+    if (!categories || categories.length === 0) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#7a7570";
+        ctx.font = "14px Inter, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("No expenses this month", canvas.width / 2, canvas.height / 2);
+        return;
+    }
+
+    var labels = [];
+    var values = [];
+    var colors = ["#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FF8A5C", "#A78BFA", "#34D399", "#F472B6", "#FBBF24", "#9CA3AF"];
+
+    for (var i = 0; i < categories.length; i++) {
+        labels.push(categories[i].name);
+        values.push(categories[i].total);
+    }
+
+    if (typeof Chart !== "undefined") {
+        categoryChart = new Chart(ctx, {
+            type: "doughnut",
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: colors.slice(0, categories.length),
+                    borderWidth: 0,
+                    hoverOffset: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: "bottom",
+                        labels: {
+                            color: "#a0a0a0",
+                            padding: 12,
+                            usePointStyle: true,
+                            font: { size: 11 }
+                        }
+                    }
+                },
+                cutout: "65%"
+            }
+        });
+    }
+}
+
+function renderRecentExpenses(expenses) {
+    var container = document.getElementById("recentExpenses");
+    if (!container) return;
+
+    if (!expenses || expenses.length === 0) {
+        container.innerHTML = '<div class="empty-state"><p>No recent expenses</p></div>';
+        return;
+    }
+
+    var categoryIcons = {
+        "Food & Dining": "🍔",
+        "Groceries": "🛒",
+        "Transport": "🚗",
+        "Utilities": "⚡",
+        "Healthcare": "🏥",
+        "Education": "📚",
+        "Shopping": "🛍️",
+        "Entertainment": "🎬",
+        "Rent": "🏠",
+        "Other": "📦"
+    };
+
+    var html = "";
+    for (var i = 0; i < expenses.length; i++) {
+        var e = expenses[i];
+        var icon = categoryIcons[e.category] || "📦";
+        html += '<div class="expense-item">';
+        html += '<div class="expense-item-left">';
+        html += '<div class="expense-item-icon">' + icon + '</div>';
+        html += '<div class="expense-item-info">';
+        html += '<div class="expense-item-title">' + escapeHtml(e.title) + '</div>';
+        html += '<div class="expense-item-meta">' + escapeHtml(e.category) + ' · ' + e.date + '</div>';
+        html += '</div></div>';
+        html += '<div class="expense-item-amount">-₹' + formatNumber(e.amount) + '</div>';
+        html += '</div>';
+    }
+    container.innerHTML = html;
+}
+
+function renderDashboardGoals(goals) {
+    var container = document.getElementById("dashboardGoals");
+    if (!container) return;
+
+    if (!goals || goals.length === 0) {
+        container.innerHTML = '<div class="empty-state"><p>No goals yet</p></div>';
+        return;
+    }
+
+    var html = "";
+    for (var i = 0; i < goals.length; i++) {
+        var g = goals[i];
+        html += '<div class="goal-card">';
+        html += '<div class="goal-header"><h3>' + escapeHtml(g.title) + '</h3></div>';
+        html += '<div class="goal-progress-bar"><div class="goal-progress-fill" style="width:' + Math.min(g.progress, 100) + '%"></div></div>';
+        html += '<div class="goal-stats"><span>₹' + formatNumber(g.saved) + ' saved</span><strong>' + g.progress + '%</strong><span>₹' + formatNumber(g.target) + ' target</span></div>';
+        html += '</div>';
+    }
+    container.innerHTML = html;
+}
+
+function formatNumber(num) {
+    if (num === undefined || num === null) return "0";
+    return parseFloat(num).toLocaleString("en-IN", { maximumFractionDigits: 2 });
 }
