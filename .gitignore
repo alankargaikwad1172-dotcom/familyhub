@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.venv/
+*.db
+familyhub.db
+create_icons.html
+create_project.py
