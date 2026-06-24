@@ -2,235 +2,610 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0a0a1a">
+    <meta name="description" content="AI-Powered Family Operating System for managing expenses, shopping, tasks, medicines and savings goals">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#0a0a1a">
-    <title>FamilyHub</title>
+    <meta name="apple-mobile-web-app-title" content="FamilyHub">
+    <title>FamilyHub - Family Manager</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    <link rel="apple-touch-icon" href="/icon-192.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
-<!-- LOGIN / REGISTER -->
-<div id="auth-screen" class="screen active">
-    <div class="auth-bg">
-        <div class="gradient-orb orb-1"></div>
-        <div class="gradient-orb orb-2"></div>
-        <div class="gradient-orb orb-3"></div>
-    </div>
-    <div class="auth-container">
-        <div class="auth-logo">
-            <div class="logo-icon">&#127968;</div>
-            <h1>FamilyHub</h1>
-            <p>AI-Powered Family Operating System</p>
-        </div>
-        <div id="login-form" class="auth-form glass-card">
-            <h2>Welcome Back</h2>
-            <div class="form-group">
-                <label>Email</label>
-                <input type="email" id="login-email" placeholder="your@email.com" autocomplete="email">
+    <!-- ==================== AUTH SCREEN ==================== -->
+    <div id="authScreen" class="screen active">
+        <div class="auth-container">
+            <div class="auth-bg-orbs">
+                <div class="orb orb-1"></div>
+                <div class="orb orb-2"></div>
+                <div class="orb orb-3"></div>
             </div>
-            <div class="form-group">
-                <label>Password</label>
-                <input type="password" id="login-password" placeholder="Your password" autocomplete="current-password">
-            </div>
-            <button class="btn btn-primary btn-full" onclick="handleLogin()">Sign In</button>
-            <p class="auth-switch">Don't have an account? <a href="#" onclick="showRegister()">Sign Up</a></p>
-        </div>
-        <div id="register-form" class="auth-form glass-card hidden">
-            <h2>Create Account</h2>
-            <div class="form-group">
-                <label>Full Name</label>
-                <input type="text" id="reg-name" placeholder="Your name" autocomplete="name">
-            </div>
-            <div class="form-group">
-                <label>Email</label>
-                <input type="email" id="reg-email" placeholder="your@email.com" autocomplete="email">
-            </div>
-            <div class="form-group">
-                <label>Password</label>
-                <input type="password" id="reg-password" placeholder="Min 6 characters" autocomplete="new-password">
-            </div>
-            <button class="btn btn-primary btn-full" onclick="handleRegister()">Create Account</button>
-            <p class="auth-switch">Already have an account? <a href="#" onclick="showLogin()">Sign In</a></p>
-        </div>
-    </div>
-</div>
+            <div class="auth-card">
+                <div class="auth-logo">
+                    <div class="logo-icon bounce-in">🏠</div>
+                    <h1>FamilyHub</h1>
+                    <p>AI-Powered Family Operating System</p>
+                </div>
 
-<!-- MAIN APP -->
-<div id="app-screen" class="screen">
-    <!-- Desktop Sidebar -->
-    <nav id="sidebar">
-        <div class="sidebar-header">
-            <div class="logo-small">&#127968;</div>
-            <span class="logo-text">FamilyHub</span>
-        </div>
-        <div class="nav-links">
-            <a class="nav-link active" data-page="dashboard" onclick="navigateTo('dashboard')">
-                <span class="nav-icon">&#128202;</span><span>Dashboard</span>
-            </a>
-            <a class="nav-link" data-page="expenses" onclick="navigateTo('expenses')">
-                <span class="nav-icon">&#128176;</span><span>Expenses</span>
-            </a>
-            <a class="nav-link" data-page="shopping" onclick="navigateTo('shopping')">
-                <span class="nav-icon">&#128722;</span><span>Shopping</span>
-            </a>
-            <a class="nav-link" data-page="tasks" onclick="navigateTo('tasks')">
-                <span class="nav-icon">&#9989;</span><span>Tasks</span>
-            </a>
-            <a class="nav-link" data-page="medicines" onclick="navigateTo('medicines')">
-                <span class="nav-icon">&#128138;</span><span>Medicines</span>
-            </a>
-            <a class="nav-link" data-page="goals" onclick="navigateTo('goals')">
-                <span class="nav-icon">&#127919;</span><span>Goals</span>
-            </a>
-            <a class="nav-link" data-page="family" onclick="navigateTo('family')">
-                <span class="nav-icon">&#128104;</span><span>Family</span>
-            </a>
-        </div>
-        <div class="sidebar-footer">
-            <div class="user-info">
-                <div class="user-avatar" id="user-avatar">U</div>
-                <div class="user-details">
-                    <span id="user-name">User</span>
-                    <small id="user-email">email</small>
+                <!-- Login Form -->
+                <div id="loginForm" class="auth-form">
+                    <h2>Welcome Back</h2>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="loginEmail" placeholder="your@email.com" inputmode="email">
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="loginPassword" placeholder="Enter password">
+                    </div>
+                    <button id="loginBtn" class="btn btn-primary btn-full" onclick="handleLogin()">
+                        Sign In
+                    </button>
+                    <p class="auth-switch">
+                        Don't have an account?
+                        <a href="#" onclick="showRegister()">Sign Up</a>
+                    </p>
+                </div>
+
+                <!-- Register Form -->
+                <div id="registerForm" class="auth-form" style="display:none;">
+                    <h2>Create Account</h2>
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="regName" placeholder="Your full name">
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="regEmail" placeholder="your@email.com" inputmode="email">
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="regPassword" placeholder="Create password">
+                    </div>
+                    <button id="registerBtn" class="btn btn-primary btn-full" onclick="handleRegister()">
+                        Create Account
+                    </button>
+                    <p class="auth-switch">
+                        Already have an account?
+                        <a href="#" onclick="showLogin()">Sign In</a>
+                    </p>
                 </div>
             </div>
-            <button class="btn-logout" onclick="handleLogout()">Sign Out</button>
         </div>
-    </nav>
+    </div>
 
-    <!-- Mobile Top Bar -->
-    <div id="mobile-topbar">
-        <div class="topbar-left">
-            <div class="topbar-logo">&#127968;</div>
-            <span class="topbar-title">FamilyHub</span>
-        </div>
-        <div class="topbar-right">
-            <div id="notification-bell" class="notif-bell hidden" onclick="showNotificationPanel()">
-                &#128276;
-                <span class="notif-badge" id="notif-count">0</span>
+    <!-- ==================== MAIN APP ==================== -->
+    <div id="appScreen" class="screen" style="display:none;">
+
+        <!-- Mobile Top Bar -->
+        <div class="mobile-topbar">
+            <div class="topbar-left">
+                <span class="topbar-logo">🏠</span>
+                <span class="topbar-title">FamilyHub</span>
             </div>
-            <button class="topbar-user" onclick="showMobileMenu()">
-                <div class="user-avatar" id="mobile-user-avatar">U</div>
-            </button>
-        </div>
-    </div>
-
-    <!-- Mobile Menu -->
-    <div id="mobile-menu-overlay" class="hidden" onclick="closeMobileMenu()"></div>
-    <div id="mobile-menu" class="hidden">
-        <div class="mobile-menu-header">
-            <div class="user-avatar large" id="menu-avatar">U</div>
-            <div class="menu-user-name" id="menu-user-name">User</div>
-            <div class="menu-user-email" id="menu-user-email">email</div>
-        </div>
-        <div class="mobile-menu-links">
-            <button onclick="closeMobileMenu(); navigateTo('medicines')">&#128138; Medicines</button>
-            <button onclick="closeMobileMenu(); navigateTo('family')">&#128104; Family</button>
-            <button onclick="closeMobileMenu(); showNotificationSettings()">&#128276; Notifications</button>
-            <button onclick="closeMobileMenu(); handleLogout()">&#128682; Sign Out</button>
-        </div>
-    </div>
-
-    <!-- Main Content -->
-    <main id="main-content">
-        <div id="page-container"></div>
-    </main>
-
-    <!-- Mobile Bottom Nav -->
-    <nav id="bottom-nav">
-        <button class="bottom-nav-btn active" data-page="dashboard" onclick="navigateTo('dashboard')">
-            <span class="bn-icon">&#128202;</span>
-            <span class="bn-label">Home</span>
-        </button>
-        <button class="bottom-nav-btn" data-page="expenses" onclick="navigateTo('expenses')">
-            <span class="bn-icon">&#128176;</span>
-            <span class="bn-label">Money</span>
-        </button>
-        <button class="bottom-nav-btn" data-page="shopping" onclick="navigateTo('shopping')">
-            <span class="bn-icon">&#128722;</span>
-            <span class="bn-label">Shop</span>
-        </button>
-        <button class="bottom-nav-btn" data-page="tasks" onclick="navigateTo('tasks')">
-            <span class="bn-icon">&#9989;</span>
-            <span class="bn-label">Tasks</span>
-        </button>
-        <button class="bottom-nav-btn" data-page="goals" onclick="navigateTo('goals')">
-            <span class="bn-icon">&#127919;</span>
-            <span class="bn-label">Goals</span>
-        </button>
-    </nav>
-</div>
-
-<!-- CAMERA MODAL -->
-<div id="camera-overlay" class="modal-overlay hidden">
-    <div class="camera-modal">
-        <div class="camera-header">
-            <h3>Take a Photo</h3>
-            <button class="btn-close" onclick="closeCamera()">&#10005;</button>
-        </div>
-        <div class="camera-body">
-            <video id="camera-video" autoplay playsinline></video>
-            <canvas id="camera-canvas" class="hidden"></canvas>
-            <img id="camera-preview" class="hidden camera-preview-img">
-        </div>
-        <div class="camera-controls">
-            <button id="btn-capture" class="btn btn-camera" onclick="capturePhoto()">&#128248; Capture</button>
-            <button id="btn-retake" class="btn btn-secondary hidden" onclick="retakePhoto()">&#128260; Retake</button>
-            <button id="btn-upload-cam" class="btn btn-primary hidden" onclick="uploadCapturedPhoto()">&#11014; Upload</button>
-        </div>
-    </div>
-</div>
-
-<!-- IMAGE VIEWER -->
-<div id="image-viewer-overlay" class="modal-overlay hidden" onclick="closeImageViewer()">
-    <div class="image-viewer" onclick="event.stopPropagation()">
-        <button class="btn-close viewer-close" onclick="closeImageViewer()">&#10005;</button>
-        <img id="viewer-image" src="" alt="Photo">
-        <div id="viewer-caption" class="viewer-caption"></div>
-    </div>
-</div>
-
-<!-- REMINDER ALERT OVERLAY -->
-<div id="reminder-alert-overlay" class="modal-overlay hidden">
-    <div class="reminder-alert glass-card">
-        <div class="reminder-alert-icon">&#128276;</div>
-        <h2 id="reminder-alert-title">Reminder!</h2>
-        <p id="reminder-alert-message">Time for grocery shopping!</p>
-        <div id="reminder-alert-items" class="reminder-items-count"></div>
-        <div id="reminder-speaking" class="speaking-indicator hidden">
-            <div class="speaking-wave">
-                <span></span><span></span><span></span><span></span><span></span>
+            <div class="topbar-right">
+                <div class="notification-bell" onclick="openNotifications()">
+                    🔔
+                    <span id="notifBadge" class="notif-badge" style="display:none;">0</span>
+                </div>
+                <div class="user-avatar" onclick="toggleUserMenu()">
+                    <span id="avatarLetter">A</span>
+                </div>
             </div>
-            <p>Speaking...</p>
         </div>
-        <button class="btn btn-primary btn-full" onclick="dismissReminderAlert()">Dismiss</button>
+
+        <!-- User Menu Drawer -->
+        <div id="userMenu" class="user-menu-drawer">
+            <div class="menu-overlay" onclick="toggleUserMenu()"></div>
+            <div class="menu-content">
+                <div class="menu-header">
+                    <div class="menu-avatar"><span id="menuAvatarLetter">A</span></div>
+                    <h3 id="menuUserName">User Name</h3>
+                    <p id="menuUserEmail">user@email.com</p>
+                </div>
+                <div class="menu-items">
+                    <div class="menu-item" onclick="showPage('medicines'); toggleUserMenu();">
+                        💊 Medicines
+                    </div>
+                    <div class="menu-item" onclick="showPage('family'); toggleUserMenu();">
+                        👨‍👩‍👧‍👦 Family
+                    </div>
+                    <div class="menu-item" onclick="openNotifSettings(); toggleUserMenu();">
+                        🔔 Notifications
+                    </div>
+                    <div class="menu-item menu-item-logout" onclick="logout()">
+                        🚪 Sign Out
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== PAGES ==================== -->
+        <div class="page-container">
+
+            <!-- HOME / DASHBOARD PAGE -->
+            <div id="page-dashboard" class="page active">
+                <div class="page-header">
+                    <h1>Dashboard</h1>
+                    <select id="familySelect" onchange="onFamilyChange()"></select>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card stat-expense">
+                        <div class="stat-icon">💰</div>
+                        <div class="stat-info">
+                            <span id="statExpenses" class="stat-value">₹0</span>
+                            <span class="stat-label">This Month</span>
+                        </div>
+                    </div>
+                    <div class="stat-card stat-shopping">
+                        <div class="stat-icon">🛒</div>
+                        <div class="stat-info">
+                            <span id="statShopping" class="stat-value">0</span>
+                            <span class="stat-label">To Buy</span>
+                        </div>
+                    </div>
+                    <div class="stat-card stat-tasks">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-info">
+                            <span id="statTasks" class="stat-value">0</span>
+                            <span class="stat-label">Pending Tasks</span>
+                        </div>
+                    </div>
+                    <div class="stat-card stat-meds">
+                        <div class="stat-icon">💊</div>
+                        <div class="stat-info">
+                            <span id="statMeds" class="stat-value">0</span>
+                            <span class="stat-label">Active Medicines</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="dashboard-section">
+                    <h2>Spending by Category</h2>
+                    <div class="chart-container">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+                <div class="dashboard-section">
+                    <h2>Recent Expenses</h2>
+                    <div id="recentExpenses" class="recent-list"></div>
+                </div>
+                <div class="dashboard-section">
+                    <h2>Family Goals</h2>
+                    <div id="dashboardGoals" class="goals-mini-list"></div>
+                </div>
+            </div>
+
+            <!-- EXPENSES PAGE -->
+            <div id="page-expenses" class="page">
+                <div class="page-header">
+                    <h1>Expenses</h1>
+                    <button class="btn btn-primary" onclick="openAddExpense()">+ Add Expense</button>
+                </div>
+                <div id="expenseSummary" class="expense-summary-card">
+                    <div class="summary-total">
+                        <span class="summary-label">Total This Month</span>
+                        <span id="totalExpenses" class="summary-amount">₹0</span>
+                    </div>
+                </div>
+                <div id="topCategories" class="top-categories"></div>
+                <div id="expenseList" class="expense-list"></div>
+            </div>
+
+            <!-- SHOPPING PAGE -->
+            <div id="page-shopping" class="page">
+                <div class="page-header">
+                    <h1>Shopping List</h1>
+                </div>
+
+                <!-- Notification Banner -->
+                <div id="notifBanner" class="notif-banner">
+                    <div class="notif-banner-text">
+                        🔔 Enable notifications to get alerts when items are added
+                    </div>
+                    <button class="btn btn-sm btn-accent" onclick="requestNotifPermission()">Enable</button>
+                </div>
+
+                <!-- Camera/Photo Section -->
+                <div class="photo-section">
+                    <button class="btn btn-camera" onclick="openCamera()">📷 Take Photo</button>
+                    <button class="btn btn-gallery" onclick="openGallery()">🖼️ Upload Photo</button>
+                </div>
+                <div id="photoGrid" class="photo-grid"></div>
+
+                <!-- Reminder Section -->
+                <div class="reminder-section">
+                    <button class="btn btn-outline btn-sm" onclick="openAddReminder()">⏰ Set Reminder</button>
+                    <div id="reminderList" class="reminder-list"></div>
+                </div>
+
+                <!-- Add Item Form -->
+                <div class="add-item-form">
+                    <input type="text" id="shopItemName" placeholder="Item name..." onkeypress="if(event.key==='Enter') addShopItem()">
+                    <input type="text" id="shopItemQty" placeholder="Qty" value="1" style="width:60px;">
+                    <button class="btn btn-primary" onclick="addShopItem()">Add</button>
+                </div>
+
+                <!-- Shopping Items -->
+                <div id="shopToBuy" class="shop-section">
+                    <h3>🛒 To Buy</h3>
+                    <div id="shopToBuyList" class="shop-list"></div>
+                </div>
+                <div id="shopBought" class="shop-section">
+                    <h3>✅ Bought</h3>
+                    <div id="shopBoughtList" class="shop-list"></div>
+                </div>
+            </div>
+
+            <!-- TASKS PAGE -->
+            <div id="page-tasks" class="page">
+                <div class="page-header">
+                    <h1>Tasks</h1>
+                    <button class="btn btn-primary" onclick="openAddTask()">+ New Task</button>
+                </div>
+                <div id="taskList" class="task-list"></div>
+            </div>
+
+            <!-- GOALS PAGE -->
+            <div id="page-goals" class="page">
+                <div class="page-header">
+                    <h1>Savings Goals</h1>
+                    <button class="btn btn-primary" onclick="openAddGoal()">+ New Goal</button>
+                </div>
+                <div id="goalsList" class="goals-list"></div>
+            </div>
+
+            <!-- MEDICINES PAGE -->
+            <div id="page-medicines" class="page">
+                <div class="page-header">
+                    <h1>Medicines</h1>
+                    <button class="btn btn-primary" onclick="openAddMed()">+ Add Medicine</button>
+                </div>
+                <div id="medList" class="med-list"></div>
+            </div>
+
+            <!-- FAMILY PAGE -->
+            <div id="page-family" class="page">
+                <div class="page-header">
+                    <h1>Family</h1>
+                </div>
+                <div id="familyInfo" class="family-info-card"></div>
+                <div id="membersList" class="members-list"></div>
+                <div class="family-actions">
+                    <button class="btn btn-primary btn-full" onclick="openJoinFamily()">Join with Code</button>
+                    <button class="btn btn-outline btn-full" onclick="openCreateFamily()">Create New Family</button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ==================== BOTTOM NAVIGATION ==================== -->
+        <div class="bottom-nav">
+            <div class="nav-item active" onclick="showPage('dashboard')">
+                <span class="nav-icon">📊</span>
+                <span class="nav-label">Home</span>
+            </div>
+            <div class="nav-item" onclick="showPage('expenses')">
+                <span class="nav-icon">💰</span>
+                <span class="nav-label">Money</span>
+            </div>
+            <div class="nav-item" onclick="showPage('shopping')">
+                <span class="nav-icon">🛒</span>
+                <span class="nav-label">Shop</span>
+            </div>
+            <div class="nav-item" onclick="showPage('tasks')">
+                <span class="nav-icon">✅</span>
+                <span class="nav-label">Tasks</span>
+            </div>
+            <div class="nav-item" onclick="showPage('goals')">
+                <span class="nav-icon">🎯</span>
+                <span class="nav-label">Goals</span>
+            </div>
+        </div>
     </div>
-</div>
 
-<!-- Toast -->
-<div id="toast-container"></div>
+    <!-- ==================== MODALS ==================== -->
 
-<!-- Modal -->
-<div id="modal-overlay" class="modal-overlay hidden">
-    <div class="modal glass-card" id="modal-content"></div>
-</div>
+    <!-- Add Expense Modal -->
+    <div id="addExpenseModal" class="modal">
+        <div class="modal-overlay" onclick="closeModal('addExpenseModal')"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add Expense</h2>
+                <button class="modal-close" onclick="closeModal('addExpenseModal')">&times;</button>
+            </div>
+            <div class="form-group">
+                <label>Title</label>
+                <input type="text" id="expTitle" placeholder="What did you spend on?">
+            </div>
+            <div class="form-group">
+                <label>Amount (₹)</label>
+                <input type="number" id="expAmount" placeholder="0.00" inputmode="decimal">
+            </div>
+            <div class="form-group">
+                <label>Category</label>
+                <select id="expCategory">
+                    <option value="Food & Dining">🍔 Food & Dining</option>
+                    <option value="Groceries">🛒 Groceries</option>
+                    <option value="Transport">🚗 Transport</option>
+                    <option value="Utilities">⚡ Utilities</option>
+                    <option value="Healthcare">🏥 Healthcare</option>
+                    <option value="Education">📚 Education</option>
+                    <option value="Shopping">🛍️ Shopping</option>
+                    <option value="Entertainment">🎬 Entertainment</option>
+                    <option value="Rent">🏠 Rent</option>
+                    <option value="Other">📦 Other</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Note (optional)</label>
+                <input type="text" id="expNote" placeholder="Any details...">
+            </div>
+            <button class="btn btn-primary btn-full" onclick="saveExpense()">Add Expense</button>
+        </div>
+    </div>
 
-<script src="/static/api.js"></script>
-<script src="/static/notifications.js"></script>
-<script src="/static/app.js"></script>
-<script src="/static/login.js"></script>
-<script src="/static/dashboard.js"></script>
-<script src="/static/expenses.js"></script>
-<script src="/static/shopping.js"></script>
-<script src="/static/tasks.js"></script>
-<script src="/static/medicines.js"></script>
-<script src="/static/goals.js"></script>
-<script src="/static/family.js"></script>
+    <!-- Add Task Modal -->
+    <div id="addTaskModal" class="modal">
+        <div class="modal-overlay" onclick="closeModal('addTaskModal')"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>New Task</h2>
+                <button class="modal-close" onclick="closeModal('addTaskModal')">&times;</button>
+            </div>
+            <div class="form-group">
+                <label>Title</label>
+                <input type="text" id="taskTitle" placeholder="What needs to be done?">
+            </div>
+            <div class="form-group">
+                <label>Priority</label>
+                <select id="taskPriority">
+                    <option value="low">🟢 Low</option>
+                    <option value="medium" selected>🟡 Medium</option>
+                    <option value="high">🔴 High</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Due Date (optional)</label>
+                <input type="date" id="taskDue">
+            </div>
+            <button class="btn btn-primary btn-full" onclick="saveTask()">Create Task</button>
+        </div>
+    </div>
+
+    <!-- Add Goal Modal -->
+    <div id="addGoalModal" class="modal">
+        <div class="modal-overlay" onclick="closeModal('addGoalModal')"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>New Goal</h2>
+                <button class="modal-close" onclick="closeModal('addGoalModal')">&times;</button>
+            </div>
+            <div class="form-group">
+                <label>Goal Name</label>
+                <input type="text" id="goalTitle" placeholder="What are you saving for?">
+            </div>
+            <div class="form-group">
+                <label>Target Amount (₹)</label>
+                <input type="number" id="goalAmount" placeholder="0.00" inputmode="decimal">
+            </div>
+            <button class="btn btn-primary btn-full" onclick="saveGoal()">Create Goal</button>
+        </div>
+    </div>
+
+    <!-- Add Medicine Modal -->
+    <div id="addMedModal" class="modal">
+        <div class="modal-overlay" onclick="closeModal('addMedModal')"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add Medicine</h2>
+                <button class="modal-close" onclick="closeModal('addMedModal')">&times;</button>
+            </div>
+            <div class="form-group">
+                <label>Person Name</label>
+                <input type="text" id="medPerson" placeholder="Who takes this medicine?">
+            </div>
+            <div class="form-group">
+                <label>Medicine Name</label>
+                <input type="text" id="medName" placeholder="Medicine name">
+            </div>
+            <div class="form-group">
+                <label>Dosage</label>
+                <input type="text" id="medDosage" placeholder="e.g. 1 tablet, 5ml">
+            </div>
+            <div class="form-group">
+                <label>Frequency</label>
+                <select id="medFreq">
+                    <option value="daily">Daily</option>
+                    <option value="twice daily">Twice Daily</option>
+                    <option value="thrice daily">Thrice Daily</option>
+                    <option value="weekly">Weekly</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Time</label>
+                <input type="time" id="medTime">
+            </div>
+            <button class="btn btn-primary btn-full" onclick="saveMed()">Add Medicine</button>
+        </div>
+    </div>
+
+    <!-- Add Reminder Modal -->
+    <div id="addReminderModal" class="modal">
+        <div class="modal-overlay" onclick="closeModal('addReminderModal')"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Set Reminder</h2>
+                <button class="modal-close" onclick="closeModal('addReminderModal')">&times;</button>
+            </div>
+            <div class="form-group">
+                <label>Title</label>
+                <input type="text" id="remTitle" placeholder="Reminder title" value="Grocery Shopping">
+            </div>
+            <div class="form-group">
+                <label>Message</label>
+                <input type="text" id="remMessage" placeholder="Reminder message" value="Time for grocery shopping! Check your shopping list.">
+            </div>
+            <div class="form-group">
+                <label>Date & Time</label>
+                <input type="datetime-local" id="remTime">
+            </div>
+            <div class="form-group form-checkbox">
+                <input type="checkbox" id="remSpeak" checked>
+                <label for="remSpeak">🔊 Speak reminder aloud</label>
+            </div>
+            <button class="btn btn-sm btn-outline" onclick="testVoice()">🎵 Test Voice</button>
+            <button class="btn btn-primary btn-full" onclick="saveReminder()">Set Reminder</button>
+        </div>
+    </div>
+
+    <!-- Create Family Modal -->
+    <div id="createFamilyModal" class="modal">
+        <div class="modal-overlay" onclick="closeModal('createFamilyModal')"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create Family</h2>
+                <button class="modal-close" onclick="closeModal('createFamilyModal')">&times;</button>
+            </div>
+            <div class="form-group">
+                <label>Family Name</label>
+                <input type="text" id="familyName" placeholder="e.g. The Gaikwad Family">
+            </div>
+            <button class="btn btn-primary btn-full" onclick="createFamily()">Create Family</button>
+        </div>
+    </div>
+
+    <!-- Join Family Modal -->
+    <div id="joinFamilyModal" class="modal">
+        <div class="modal-overlay" onclick="closeModal('joinFamilyModal')"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Join Family</h2>
+                <button class="modal-close" onclick="closeModal('joinFamilyModal')">&times;</button>
+            </div>
+            <div class="form-group">
+                <label>Invite Code</label>
+                <input type="text" id="joinCode" placeholder="Enter invite code">
+            </div>
+            <button class="btn btn-primary btn-full" onclick="joinFamily()">Join Family</button>
+        </div>
+    </div>
+
+    <!-- Camera Modal -->
+    <div id="cameraModal" class="modal">
+        <div class="modal-overlay" onclick="closeCamera()"></div>
+        <div class="modal-content camera-modal">
+            <div class="modal-header">
+                <h2>Take Photo</h2>
+                <button class="modal-close" onclick="closeCamera()">&times;</button>
+            </div>
+            <div class="camera-preview">
+                <video id="cameraVideo" autoplay playsinline></video>
+                <canvas id="cameraCanvas" style="display:none;"></canvas>
+            </div>
+            <div class="camera-controls">
+                <button class="btn btn-primary btn-full" onclick="capturePhoto()">📸 Capture</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Photo Viewer Modal -->
+    <div id="photoViewer" class="modal">
+        <div class="modal-overlay" onclick="closeModal('photoViewer')"></div>
+        <div class="modal-content photo-viewer-content">
+            <div class="modal-header">
+                <h2 id="photoViewerTitle">Photo</h2>
+                <button class="modal-close" onclick="closeModal('photoViewer')">&times;</button>
+            </div>
+            <div class="photo-viewer-body">
+                <img id="photoViewerImg" src="" alt="Photo">
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications Panel -->
+    <div id="notifPanel" class="modal">
+        <div class="modal-overlay" onclick="closeModal('notifPanel')"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Notifications</h2>
+                <button class="modal-close" onclick="closeModal('notifPanel')">&times;</button>
+            </div>
+            <div id="notifList" class="notif-list-panel"></div>
+        </div>
+    </div>
+
+    <!-- Notification Settings Modal -->
+    <div id="notifSettingsModal" class="modal">
+        <div class="modal-overlay" onclick="closeModal('notifSettingsModal')"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Notification Settings</h2>
+                <button class="modal-close" onclick="closeModal('notifSettingsModal')">&times;</button>
+            </div>
+            <div class="form-group">
+                <p>Current status: <strong id="notifPermStatus">Unknown</strong></p>
+            </div>
+            <button class="btn btn-primary btn-full" onclick="requestNotifPermission()">Enable Notifications</button>
+        </div>
+    </div>
+
+    <!-- Alert Overlay for Reminders -->
+    <div id="alertOverlay" class="alert-overlay" style="display:none;">
+        <div class="alert-card">
+            <div class="alert-icon">🔔</div>
+            <h2 id="alertTitle">Reminder!</h2>
+            <p id="alertMessage">Time for grocery shopping!</p>
+            <p id="alertItemCount" class="alert-item-count"></p>
+            <div id="alertSpeaking" class="speaking-animation" style="display:none;">
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <span>Speaking...</span>
+            </div>
+            <button class="btn btn-primary btn-full" onclick="dismissAlert()">Dismiss</button>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Hidden file input for gallery -->
+    <input type="file" id="galleryInput" accept="image/*" style="display:none;" onchange="handleGallerySelect(event)">
+
+    <!-- Scripts -->
+    <script src="/static/api.js"></script>
+    <script src="/static/login.js"></script>
+    <script src="/static/dashboard.js"></script>
+    <script src="/static/expenses.js"></script>
+    <script src="/static/shopping.js"></script>
+    <script src="/static/tasks.js"></script>
+    <script src="/static/medicines.js"></script>
+    <script src="/static/goals.js"></script>
+    <script src="/static/family.js"></script>
+    <script src="/static/notifications.js"></script>
+    <script src="/static/app.js"></script>
+
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js').then(function(reg) {
+                    console.log('ServiceWorker registered:', reg.scope);
+                }).catch(function(err) {
+                    console.log('ServiceWorker registration failed:', err);
+                });
+            });
+        }
+    </script>
 
 </body>
 </html>

@@ -1,38 +1,57 @@
-/*
- * sw.js
- * Service Worker for background notifications.
- */
+const CACHE_NAME = 'familyhub-v1';
+const urlsToCache = [
+    '/',
+    '/static/style.css',
+    '/static/app.js',
+    '/static/api.js',
+    '/static/login.js'
+];
 
 self.addEventListener('install', function(event) {
+    event.waitUntil(
+        caches.open(CACHE_NAME).then(function(cache) {
+            return cache.addAll(urlsToCache).catch(function(err) {
+                console.log('Cache addAll failed:', err);
+            });
+        })
+    );
     self.skipWaiting();
 });
 
 self.addEventListener('activate', function(event) {
-    event.waitUntil(clients.claim());
+    event.waitUntil(
+        caches.keys().then(function(names) {
+            return Promise.all(
+                names.filter(function(name) {
+                    return name !== CACHE_NAME;
+                }).map(function(name) {
+                    return caches.delete(name);
+                })
+            );
+        })
+    );
+    self.clients.claim();
+});
+
+self.addEventListener('fetch', function(event) {
+    event.respondWith(
+        fetch(event.request).catch(function() {
+            return caches.match(event.request);
+        })
+    );
 });
 
 self.addEventListener('notificationclick', function(event) {
     event.notification.close();
     event.waitUntil(
-        clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
-            if (clientList.length > 0) {
-                return clientList[0].focus();
+        self.clients.matchAll({ type: 'window' }).then(function(clientList) {
+            for (var i = 0; i < clientList.length; i++) {
+                var client = clientList[i];
+                if ('focus' in client) {
+                    return client.focus();
+                }
             }
-            return clients.openWindow('/');
+            return self.clients.openWindow('/');
         })
     );
-});
-
-self.addEventListener('push', function(event) {
-    if (event.data) {
-        var data = event.data.json();
-        event.waitUntil(
-            self.registration.showNotification(data.title || 'FamilyHub', {
-                body: data.body || 'You have a new notification',
-                tag: data.tag || 'familyhub-notification',
-                renotify: true,
-                vibrate: [200, 100, 200]
-            })
-        );
-    }
 });

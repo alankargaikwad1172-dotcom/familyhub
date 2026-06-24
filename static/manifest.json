@@ -1,24 +1,27 @@
 {
     "name": "FamilyHub - Family Manager",
     "short_name": "FamilyHub",
-    "description": "AI-Powered Family Operating System",
+    "description": "AI-Powered Family Operating System for managing expenses, shopping, tasks, medicines and savings goals",
     "start_url": "/",
+    "scope": "/",
     "display": "standalone",
     "background_color": "#0a0a1a",
     "theme_color": "#0a0a1a",
     "orientation": "portrait",
+    "categories": ["lifestyle", "productivity", "finance"],
+    "lang": "en",
     "icons": [
         {
-            "src": "/static/icon-192.png",
+            "src": "/icon-192.png",
             "sizes": "192x192",
             "type": "image/png",
-            "purpose": "any maskable"
+            "purpose": "any"
         },
         {
-            "src": "/static/icon-512.png",
+            "src": "/icon-512.png",
             "sizes": "512x512",
             "type": "image/png",
-            "purpose": "any maskable"
+            "purpose": "any"
         }
     ]
 }
