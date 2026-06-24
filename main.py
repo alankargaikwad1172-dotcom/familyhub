@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import uvicorn
@@ -53,10 +53,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="FamilyHub AI", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
-# Mount static files
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
-# Include all routers
+# Include all routers FIRST (before static mount catches everything)
 app.include_router(auth_router, prefix="/api")
 app.include_router(families_router, prefix="/api")
 app.include_router(expenses_router, prefix="/api")
@@ -68,22 +65,25 @@ app.include_router(dashboard_router, prefix="/api")
 app.include_router(images_router, prefix="/api")
 app.include_router(notifications_router, prefix="/api")
 
+# Mount static files
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 # Serve homepage
 @app.get("/")
 async def serve_homepage():
     return FileResponse("static/index.html")
 
-# Serve manifest.json at root (PWA Builder needs this)
+# Serve manifest at root for PWA Builder
 @app.get("/manifest.json")
 async def serve_manifest():
     return FileResponse("static/manifest.json", media_type="application/json")
 
-# Serve service worker at root (PWA Builder needs this)
+# Serve service worker at root
 @app.get("/sw.js")
 async def serve_sw():
     return FileResponse("static/sw.js", media_type="application/javascript")
 
-# Serve icons at root (manifest references these)
+# Serve icons at root
 @app.get("/icon-192.png")
 async def serve_icon_192():
     return FileResponse("static/icon-192.png", media_type="image/png")
