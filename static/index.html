@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0a0a1a">
+    <title>FamilyHub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<!-- LOGIN / REGISTER -->
+<div id="auth-screen" class="screen active">
+    <div class="auth-bg">
+        <div class="gradient-orb orb-1"></div>
+        <div class="gradient-orb orb-2"></div>
+        <div class="gradient-orb orb-3"></div>
+    </div>
+    <div class="auth-container">
+        <div class="auth-logo">
+            <div class="logo-icon">&#127968;</div>
+            <h1>FamilyHub</h1>
+            <p>AI-Powered Family Operating System</p>
+        </div>
+        <div id="login-form" class="auth-form glass-card">
+            <h2>Welcome Back</h2>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="login-email" placeholder="your@email.com" autocomplete="email">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="login-password" placeholder="Your password" autocomplete="current-password">
+            </div>
+            <button class="btn btn-primary btn-full" onclick="handleLogin()">Sign In</button>
+            <p class="auth-switch">Don't have an account? <a href="#" onclick="showRegister()">Sign Up</a></p>
+        </div>
+        <div id="register-form" class="auth-form glass-card hidden">
+            <h2>Create Account</h2>
+            <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" id="reg-name" placeholder="Your name" autocomplete="name">
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="reg-email" placeholder="your@email.com" autocomplete="email">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="reg-password" placeholder="Min 6 characters" autocomplete="new-password">
+            </div>
+            <button class="btn btn-primary btn-full" onclick="handleRegister()">Create Account</button>
+            <p class="auth-switch">Already have an account? <a href="#" onclick="showLogin()">Sign In</a></p>
+        </div>
+    </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app-screen" class="screen">
+    <!-- Desktop Sidebar -->
+    <nav id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-small">&#127968;</div>
+            <span class="logo-text">FamilyHub</span>
+        </div>
+        <div class="nav-links">
+            <a class="nav-link active" data-page="dashboard" onclick="navigateTo('dashboard')">
+                <span class="nav-icon">&#128202;</span><span>Dashboard</span>
+            </a>
+            <a class="nav-link" data-page="expenses" onclick="navigateTo('expenses')">
+                <span class="nav-icon">&#128176;</span><span>Expenses</span>
+            </a>
+            <a class="nav-link" data-page="shopping" onclick="navigateTo('shopping')">
+                <span class="nav-icon">&#128722;</span><span>Shopping</span>
+            </a>
+            <a class="nav-link" data-page="tasks" onclick="navigateTo('tasks')">
+                <span class="nav-icon">&#9989;</span><span>Tasks</span>
+            </a>
+            <a class="nav-link" data-page="medicines" onclick="navigateTo('medicines')">
+                <span class="nav-icon">&#128138;</span><span>Medicines</span>
+            </a>
+            <a class="nav-link" data-page="goals" onclick="navigateTo('goals')">
+                <span class="nav-icon">&#127919;</span><span>Goals</span>
+            </a>
+            <a class="nav-link" data-page="family" onclick="navigateTo('family')">
+                <span class="nav-icon">&#128104;</span><span>Family</span>
+            </a>
+        </div>
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar" id="user-avatar">U</div>
+                <div class="user-details">
+                    <span id="user-name">User</span>
+                    <small id="user-email">email</small>
+                </div>
+            </div>
+            <button class="btn-logout" onclick="handleLogout()">Sign Out</button>
+        </div>
+    </nav>
+
+    <!-- Mobile Top Bar -->
+    <div id="mobile-topbar">
+        <div class="topbar-left">
+            <div class="topbar-logo">&#127968;</div>
+            <span class="topbar-title">FamilyHub</span>
+        </div>
+        <div class="topbar-right">
+            <div id="notification-bell" class="notif-bell hidden" onclick="showNotificationPanel()">
+                &#128276;
+                <span class="notif-badge" id="notif-count">0</span>
+            </div>
+            <button class="topbar-user" onclick="showMobileMenu()">
+                <div class="user-avatar" id="mobile-user-avatar">U</div>
+            </button>
+        </div>
+    </div>
+
+    <!-- Mobile Menu -->
+    <div id="mobile-menu-overlay" class="hidden" onclick="closeMobileMenu()"></div>
+    <div id="mobile-menu" class="hidden">
+        <div class="mobile-menu-header">
+            <div class="user-avatar large" id="menu-avatar">U</div>
+            <div class="menu-user-name" id="menu-user-name">User</div>
+            <div class="menu-user-email" id="menu-user-email">email</div>
+        </div>
+        <div class="mobile-menu-links">
+            <button onclick="closeMobileMenu(); navigateTo('medicines')">&#128138; Medicines</button>
+            <button onclick="closeMobileMenu(); navigateTo('family')">&#128104; Family</button>
+            <button onclick="closeMobileMenu(); showNotificationSettings()">&#128276; Notifications</button>
+            <button onclick="closeMobileMenu(); handleLogout()">&#128682; Sign Out</button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main id="main-content">
+        <div id="page-container"></div>
+    </main>
+
+    <!-- Mobile Bottom Nav -->
+    <nav id="bottom-nav">
+        <button class="bottom-nav-btn active" data-page="dashboard" onclick="navigateTo('dashboard')">
+            <span class="bn-icon">&#128202;</span>
+            <span class="bn-label">Home</span>
+        </button>
+        <button class="bottom-nav-btn" data-page="expenses" onclick="navigateTo('expenses')">
+            <span class="bn-icon">&#128176;</span>
+            <span class="bn-label">Money</span>
+        </button>
+        <button class="bottom-nav-btn" data-page="shopping" onclick="navigateTo('shopping')">
+            <span class="bn-icon">&#128722;</span>
+            <span class="bn-label">Shop</span>
+        </button>
+        <button class="bottom-nav-btn" data-page="tasks" onclick="navigateTo('tasks')">
+            <span class="bn-icon">&#9989;</span>
+            <span class="bn-label">Tasks</span>
+        </button>
+        <button class="bottom-nav-btn" data-page="goals" onclick="navigateTo('goals')">
+            <span class="bn-icon">&#127919;</span>
+            <span class="bn-label">Goals</span>
+        </button>
+    </nav>
+</div>
+
+<!-- CAMERA MODAL -->
+<div id="camera-overlay" class="modal-overlay hidden">
+    <div class="camera-modal">
+        <div class="camera-header">
+            <h3>Take a Photo</h3>
+            <button class="btn-close" onclick="closeCamera()">&#10005;</button>
+        </div>
+        <div class="camera-body">
+            <video id="camera-video" autoplay playsinline></video>
+            <canvas id="camera-canvas" class="hidden"></canvas>
+            <img id="camera-preview" class="hidden camera-preview-img">
+        </div>
+        <div class="camera-controls">
+            <button id="btn-capture" class="btn btn-camera" onclick="capturePhoto()">&#128248; Capture</button>
+            <button id="btn-retake" class="btn btn-secondary hidden" onclick="retakePhoto()">&#128260; Retake</button>
+            <button id="btn-upload-cam" class="btn btn-primary hidden" onclick="uploadCapturedPhoto()">&#11014; Upload</button>
+        </div>
+    </div>
+</div>
+
+<!-- IMAGE VIEWER -->
+<div id="image-viewer-overlay" class="modal-overlay hidden" onclick="closeImageViewer()">
+    <div class="image-viewer" onclick="event.stopPropagation()">
+        <button class="btn-close viewer-close" onclick="closeImageViewer()">&#10005;</button>
+        <img id="viewer-image" src="" alt="Photo">
+        <div id="viewer-caption" class="viewer-caption"></div>
+    </div>
+</div>
+
+<!-- REMINDER ALERT OVERLAY -->
+<div id="reminder-alert-overlay" class="modal-overlay hidden">
+    <div class="reminder-alert glass-card">
+        <div class="reminder-alert-icon">&#128276;</div>
+        <h2 id="reminder-alert-title">Reminder!</h2>
+        <p id="reminder-alert-message">Time for grocery shopping!</p>
+        <div id="reminder-alert-items" class="reminder-items-count"></div>
+        <div id="reminder-speaking" class="speaking-indicator hidden">
+            <div class="speaking-wave">
+                <span></span><span></span><span></span><span></span><span></span>
+            </div>
+            <p>Speaking...</p>
+        </div>
+        <button class="btn btn-primary btn-full" onclick="dismissReminderAlert()">Dismiss</button>
+    </div>
+</div>
+
+<!-- Toast -->
+<div id="toast-container"></div>
+
+<!-- Modal -->
+<div id="modal-overlay" class="modal-overlay hidden">
+    <div class="modal glass-card" id="modal-content"></div>
+</div>
+
+<script src="/static/api.js"></script>
+<script src="/static/notifications.js"></script>
+<script src="/static/app.js"></script>
+<script src="/static/login.js"></script>
+<script src="/static/dashboard.js"></script>
+<script src="/static/expenses.js"></script>
+<script src="/static/shopping.js"></script>
+<script src="/static/tasks.js"></script>
+<script src="/static/medicines.js"></script>
+<script src="/static/goals.js"></script>
+<script src="/static/family.js"></script>
+
+</body>
+</html>

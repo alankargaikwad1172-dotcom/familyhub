@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<body>
+<canvas id="c192" width="192" height="192"></canvas>
+<canvas id="c512" width="512" height="512"></canvas>
+<script>
+function drawIcon(canvas) {
+    var ctx = canvas.getContext("2d");
+    var s = canvas.width;
+    var r = s / 2;
+
+    // Background circle
+    ctx.beginPath();
+    ctx.arc(r, r, r, 0, Math.PI * 2);
+    var grad = ctx.createLinearGradient(0, 0, s, s);
+    grad.addColorStop(0, "#6366f1");
+    grad.addColorStop(1, "#a78bfa");
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // House shape
+    ctx.fillStyle = "white";
+    ctx.beginPath();
+    ctx.moveTo(r, s * 0.25);
+    ctx.lineTo(s * 0.7, s * 0.45);
+    ctx.lineTo(s * 0.7, s * 0.75);
+    ctx.lineTo(s * 0.3, s * 0.75);
+    ctx.lineTo(s * 0.3, s * 0.45);
+    ctx.closePath();
+    ctx.fill();
+
+    // Door
+    ctx.fillStyle = "#6366f1";
+    ctx.fillRect(s * 0.43, s * 0.55, s * 0.14, s * 0.2);
+
+    // Window
+    ctx.fillRect(s * 0.35, s * 0.47, s * 0.08, s * 0.07);
+    ctx.fillRect(s * 0.57, s * 0.47, s * 0.08, s * 0.07);
+
+    // Heart
+    ctx.fillStyle = "#f43f5e";
+    ctx.font = (s * 0.12) + "px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText("❤", r, s * 0.92);
+}
+
+drawIcon(document.getElementById("c192"));
+drawIcon(document.getElementById("c512"));
+
+// Download function
+function download(canvas, name) {
+    var link = document.createElement("a");
+    link.download = name;
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+}
+
+// Auto download
+setTimeout(function() {
+    download(document.getElementById("c192"), "icon-192.png");
+    download(document.getElementById("c512"), "icon-512.png");
+    alert("Icons downloaded! Move them to your familyhub/static/ folder.");
+}, 500);
+</script>
+</body>
+</html>
