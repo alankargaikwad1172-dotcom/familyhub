@@ -4,18 +4,1699 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0a0a1a">
-    <meta name="description" content="AI-Powered Family Operating System for managing expenses, shopping, tasks, medicines and savings goals">
+    <meta name="description" content="AI-Powered Family Operating System">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="FamilyHub">
     <title>FamilyHub - Family Manager</title>
-    <link rel="manifest" href="/manifest.json">
-    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
-    <link rel="apple-touch-icon" href="/icon-192.png">
+    <link rel="manifest" href="https://familyhub-1u10.onrender.com/manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="https://familyhub-1u10.onrender.com/icon-192.png">
+    <link rel="apple-touch-icon" href="https://familyhub-1u10.onrender.com/icon-192.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="https://familyhub-1u10.onrender.com/static/style.css">
+
+    <style>
+        /* ==================== INLINE FALLBACK CSS ==================== */
+        /* This ensures the app shows SOMETHING even if external CSS fails */
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background: #0a0a1a;
+            color: #f0ece4;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        /* Auth Screen */
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auth-bg-orbs {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.3;
+            animation: float 8s ease-in-out infinite;
+        }
+
+        .orb-1 {
+            width: 300px;
+            height: 300px;
+            background: #6366f1;
+            top: -100px;
+            left: -100px;
+        }
+
+        .orb-2 {
+            width: 250px;
+            height: 250px;
+            background: #a78bfa;
+            bottom: -80px;
+            right: -80px;
+            animation-delay: 3s;
+        }
+
+        .orb-3 {
+            width: 200px;
+            height: 200px;
+            background: #10b981;
+            top: 50%;
+            left: 50%;
+            animation-delay: 5s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -30px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+        }
+
+        .auth-card {
+            position: relative;
+            z-index: 1;
+            background: rgba(18, 18, 42, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 24px;
+            padding: 40px 30px;
+            max-width: 420px;
+            width: 100%;
+        }
+
+        .auth-logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo-icon {
+            font-size: 48px;
+            display: inline-block;
+            animation: bounceIn 0.6s ease;
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .auth-logo h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+            color: #f0ece4;
+            margin-top: 8px;
+        }
+
+        .auth-logo p {
+            color: #7a7570;
+            font-size: 14px;
+            margin-top: 4px;
+        }
+
+        .auth-form h2 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #f0ece4;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #a0a0a0;
+            margin-bottom: 6px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: #f0ece4;
+            font-size: 16px;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: border-color 0.2s ease, background 0.2s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: #6366f1;
+            background: rgba(99, 102, 241, 0.08);
+        }
+
+        .form-group input::placeholder {
+            color: #555;
+        }
+
+        .form-group select option {
+            background: #1a1a2e;
+            color: #f0ece4;
+        }
+
+        /* Password wrapper */
+        .password-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .password-wrapper input {
+            padding-right: 50px;
+            width: 100%;
+        }
+
+        .eye-btn {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 6px;
+            border-radius: 8px;
+            transition: background 0.2s ease;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+        }
+
+        .eye-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .eye-btn:active {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            white-space: nowrap;
+            min-height: 48px;
+        }
+
+        .btn-primary {
+            background: #6366f1;
+            color: white;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: #5558e6;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-full {
+            width: 100%;
+            margin-top: 8px;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid rgba(99, 102, 241, 0.4);
+            color: #a78bfa;
+        }
+
+        .btn-outline:hover {
+            background: rgba(99, 102, 241, 0.1);
+            border-color: #6366f1;
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 13px;
+            min-height: 36px;
+            border-radius: 10px;
+        }
+
+        .btn-accent {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-camera {
+            background: #0ea5e9;
+            color: white;
+            flex: 1;
+        }
+
+        .btn-gallery {
+            background: #a78bfa;
+            color: white;
+            flex: 1;
+        }
+
+        .auth-switch {
+            text-align: center;
+            margin-top: 16px;
+            font-size: 14px;
+            color: #7a7570;
+        }
+
+        .auth-switch a {
+            color: #6366f1;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .auth-switch a:hover {
+            text-decoration: underline;
+        }
+
+        /* ==================== APP SCREEN ==================== */
+
+        #appScreen {
+            display: none;
+            min-height: 100vh;
+            padding-bottom: 80px;
+        }
+
+        /* Mobile Top Bar */
+        .mobile-topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 20px;
+            background: rgba(10, 10, 26, 0.9);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .topbar-logo {
+            font-size: 24px;
+        }
+
+        .topbar-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            color: #f0ece4;
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .notification-bell {
+            position: relative;
+            font-size: 22px;
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        .notif-badge {
+            position: absolute;
+            top: -2px;
+            right: -4px;
+            background: #f43f5e;
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            min-width: 18px;
+            height: 18px;
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1, #a78bfa);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 14px;
+            color: white;
+        }
+
+        /* User Menu Drawer */
+        .user-menu-drawer {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 200;
+        }
+
+        .user-menu-drawer.open {
+            display: block;
+        }
+
+        .menu-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .menu-content {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 280px;
+            max-width: 85vw;
+            background: #12122a;
+            border-left: 1px solid rgba(99, 102, 241, 0.2);
+            padding: 0;
+            animation: slideInRight 0.3s ease;
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+
+        .menu-header {
+            padding: 30px 24px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(167, 139, 250, 0.1));
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .menu-avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1, #a78bfa);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 12px;
+        }
+
+        .menu-header h3 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            color: #f0ece4;
+        }
+
+        .menu-header p {
+            font-size: 13px;
+            color: #7a7570;
+            margin-top: 2px;
+        }
+
+        .menu-items {
+            padding: 12px 0;
+        }
+
+        .menu-item {
+            padding: 14px 24px;
+            font-size: 15px;
+            color: #d0d0d0;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .menu-item:hover {
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .menu-item-logout {
+            color: #f43f5e;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            margin-top: 8px;
+            padding-top: 16px;
+        }
+
+        /* ==================== PAGES ==================== */
+
+        .page-container {
+            padding: 20px 16px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .page-header h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: #f0ece4;
+        }
+
+        .page-header select {
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: #f0ece4;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+        }
+
+        .page-header select option {
+            background: #1a1a2e;
+            color: #f0ece4;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            background: rgba(18, 18, 42, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            padding: 18px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-icon {
+            font-size: 28px;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            flex-shrink: 0;
+        }
+
+        .stat-expense .stat-icon { background: rgba(99, 102, 241, 0.15); }
+        .stat-shopping .stat-icon { background: rgba(16, 185, 129, 0.15); }
+        .stat-tasks .stat-icon { background: rgba(245, 158, 11, 0.15); }
+        .stat-meds .stat-icon { background: rgba(244, 63, 94, 0.15); }
+
+        .stat-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-value {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            color: #f0ece4;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #7a7570;
+            margin-top: 2px;
+        }
+
+        /* Dashboard Sections */
+        .dashboard-section {
+            margin-bottom: 28px;
+        }
+
+        .dashboard-section h2 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            color: #f0ece4;
+            margin-bottom: 14px;
+        }
+
+        .chart-container {
+            background: rgba(18, 18, 42, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            padding: 20px;
+            max-height: 300px;
+        }
+
+        /* Expense Summary */
+        .expense-summary-card {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(167, 139, 250, 0.1));
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .summary-label {
+            font-size: 13px;
+            color: #a0a0a0;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .summary-amount {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 32px;
+            font-weight: 700;
+            color: #f0ece4;
+        }
+
+        /* Categories */
+        .top-categories {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .cat-card {
+            background: rgba(18, 18, 42, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 14px;
+            text-align: center;
+        }
+
+        .cat-card .cat-icon {
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+
+        .cat-card .cat-name {
+            font-size: 11px;
+            color: #a0a0a0;
+            margin-bottom: 2px;
+        }
+
+        .cat-card .cat-total {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            color: #f0ece4;
+        }
+
+        /* Expense List */
+        .expense-list,
+        .recent-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .expense-item {
+            background: rgba(18, 18, 42, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .expense-item-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .expense-item-icon {
+            font-size: 24px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            flex-shrink: 0;
+        }
+
+        .expense-item-info {
+            min-width: 0;
+        }
+
+        .expense-item-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #f0ece4;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .expense-item-meta {
+            font-size: 12px;
+            color: #7a7570;
+            margin-top: 2px;
+        }
+
+        .expense-item-amount {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            color: #f43f5e;
+            flex-shrink: 0;
+        }
+
+        .expense-item-delete {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 4px;
+            flex-shrink: 0;
+        }
+
+        .expense-item-delete:hover {
+            color: #f43f5e;
+        }
+
+        /* ==================== SHOPPING LIST ==================== */
+
+        .notif-banner {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.05));
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 12px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .notif-banner.hidden {
+            display: none;
+        }
+
+        .notif-banner-text {
+            font-size: 13px;
+            color: #fbbf24;
+            flex: 1;
+        }
+
+        .photo-section {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .photo-thumb {
+            aspect-ratio: 1;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+
+        .photo-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .photo-thumb-delete {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .reminder-section {
+            margin-bottom: 16px;
+        }
+
+        .reminder-list {
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .reminder-item {
+            background: rgba(18, 18, 42, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 13px;
+            color: #d0d0d0;
+        }
+
+        .add-item-form {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .add-item-form input {
+            flex: 1;
+            padding: 12px 14px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: #f0ece4;
+            font-size: 15px;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+        }
+
+        .add-item-form input:focus {
+            border-color: #6366f1;
+        }
+
+        .add-item-form input::placeholder {
+            color: #555;
+        }
+
+        .shop-section {
+            margin-bottom: 20px;
+        }
+
+        .shop-section h3 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            color: #f0ece4;
+            margin-bottom: 10px;
+        }
+
+        .shop-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .shop-item {
+            background: rgba(18, 18, 42, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 12px 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .shop-item.bought {
+            opacity: 0.5;
+        }
+
+        .shop-item.bought .shop-item-name {
+            text-decoration: line-through;
+            color: #7a7570;
+        }
+
+        .shop-item-check {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            border: 2px solid rgba(99, 102, 241, 0.4);
+            background: transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+        }
+
+        .shop-item-check.checked {
+            background: #10b981;
+            border-color: #10b981;
+        }
+
+        .shop-item-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .shop-item-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: #f0ece4;
+        }
+
+        .shop-item-qty {
+            font-size: 12px;
+            color: #7a7570;
+        }
+
+        .shop-item-delete {
+            background: none;
+            border: none;
+            color: #555;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 4px;
+            flex-shrink: 0;
+        }
+
+        .shop-item-delete:hover {
+            color: #f43f5e;
+        }
+
+        /* ==================== TASKS ==================== */
+
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .task-item {
+            background: rgba(18, 18, 42, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .task-item.done {
+            opacity: 0.5;
+        }
+
+        .task-item.done .task-item-title {
+            text-decoration: line-through;
+            color: #7a7570;
+        }
+
+        .task-priority {
+            width: 8px;
+            height: 36px;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+
+        .task-priority.high { background: #f43f5e; }
+        .task-priority.medium { background: #f59e0b; }
+        .task-priority.low { background: #10b981; }
+
+        .task-item-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .task-item-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #f0ece4;
+        }
+
+        .task-item-meta {
+            font-size: 12px;
+            color: #7a7570;
+            margin-top: 2px;
+        }
+
+        .task-item-actions {
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .task-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 6px;
+            border-radius: 8px;
+        }
+
+        .task-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* ==================== GOALS ==================== */
+
+        .goals-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .goals-mini-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .goal-card {
+            background: rgba(18, 18, 42, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            padding: 20px;
+        }
+
+        .goal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .goal-header h3 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            color: #f0ece4;
+        }
+
+        .goal-delete-btn {
+            background: none;
+            border: none;
+            color: #555;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 4px;
+        }
+
+        .goal-delete-btn:hover {
+            color: #f43f5e;
+        }
+
+        .goal-progress-bar {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .goal-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #34d399);
+            border-radius: 5px;
+            transition: width 0.5s ease;
+        }
+
+        .goal-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: #7a7570;
+            margin-bottom: 12px;
+        }
+
+        .goal-stats strong {
+            color: #10b981;
+        }
+
+        .goal-contribute {
+            display: flex;
+            gap: 8px;
+        }
+
+        .goal-contribute input {
+            flex: 1;
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: #f0ece4;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+        }
+
+        .goal-contribute input:focus {
+            border-color: #10b981;
+        }
+
+        .goal-contribute input::placeholder {
+            color: #555;
+        }
+
+        /* ==================== MEDICINES ==================== */
+
+        .med-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .med-item {
+            background: rgba(18, 18, 42, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .med-item-info {
+            flex: 1;
+        }
+
+        .med-item-person {
+            font-size: 12px;
+            color: #a78bfa;
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .med-item-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: #f0ece4;
+        }
+
+        .med-item-details {
+            font-size: 12px;
+            color: #7a7570;
+            margin-top: 4px;
+        }
+
+        .med-item-delete {
+            background: none;
+            border: none;
+            color: #555;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 6px;
+        }
+
+        .med-item-delete:hover {
+            color: #f43f5e;
+        }
+
+        /* ==================== FAMILY ==================== */
+
+        .family-info-card {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(167, 139, 250, 0.1));
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .family-info-card h2 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+            color: #f0ece4;
+            margin-bottom: 8px;
+        }
+
+        .family-info-card .invite-code {
+            display: inline-block;
+            background: rgba(99, 102, 241, 0.2);
+            border: 1px dashed #6366f1;
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-family: 'Space Grotesk', monospace;
+            font-size: 20px;
+            font-weight: 700;
+            color: #a78bfa;
+            letter-spacing: 3px;
+            margin: 8px 0;
+        }
+
+        .family-info-card .copy-btn {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 8px 16px;
+            background: #6366f1;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .members-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .member-item {
+            background: rgba(18, 18, 42, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .member-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 16px;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .member-info {
+            flex: 1;
+        }
+
+        .member-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: #f0ece4;
+        }
+
+        .member-role {
+            font-size: 12px;
+            color: #7a7570;
+        }
+
+        .family-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* ==================== MODALS ==================== */
+
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 300;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        .modal.open {
+            display: flex;
+        }
+
+        .modal-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+        }
+
+        .modal-content {
+            position: relative;
+            z-index: 1;
+            background: #12122a;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 24px 24px 0 0;
+            padding: 24px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 20px;
+            font-weight: 600;
+            color: #f0ece4;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: #7a7570;
+            font-size: 28px;
+            cursor: pointer;
+            padding: 4px;
+            line-height: 1;
+        }
+
+        .modal-close:hover {
+            color: #f0ece4;
+        }
+
+        .form-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-checkbox input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            accent-color: #6366f1;
+        }
+
+        .form-checkbox label {
+            margin-bottom: 0;
+        }
+
+        /* Camera Modal */
+        .camera-modal {
+            max-width: 100%;
+        }
+
+        .camera-preview {
+            width: 100%;
+            aspect-ratio: 4/3;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .camera-preview video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .camera-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Photo Viewer */
+        .photo-viewer-content {
+            max-width: 95vw;
+            max-height: 90vh;
+        }
+
+        .photo-viewer-body {
+            text-align: center;
+        }
+
+        .photo-viewer-body img {
+            max-width: 100%;
+            max-height: 70vh;
+            border-radius: 12px;
+        }
+
+        /* ==================== NOTIFICATIONS PANEL ==================== */
+
+        .notif-list-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .notif-item-panel {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            padding: 12px 14px;
+            font-size: 14px;
+            color: #d0d0d0;
+        }
+
+        .notif-item-panel .notif-time {
+            font-size: 11px;
+            color: #7a7570;
+            margin-top: 4px;
+        }
+
+        /* ==================== ALERT OVERLAY ==================== */
+
+        .alert-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 400;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .alert-card {
+            background: #12122a;
+            border: 2px solid #6366f1;
+            border-radius: 24px;
+            padding: 40px 30px;
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+            animation: bounceIn 0.5s ease;
+        }
+
+        .alert-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .alert-card h2 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: #f0ece4;
+            margin-bottom: 8px;
+        }
+
+        .alert-card p {
+            font-size: 15px;
+            color: #d0d0d0;
+            margin-bottom: 8px;
+        }
+
+        .alert-item-count {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            color: #f59e0b;
+        }
+
+        .speaking-animation {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            margin: 16px 0;
+        }
+
+        .speaking-animation span {
+            font-size: 13px;
+            color: #10b981;
+            margin-left: 8px;
+        }
+
+        .wave-bar {
+            width: 4px;
+            height: 20px;
+            background: #10b981;
+            border-radius: 2px;
+            animation: wave 0.8s ease-in-out infinite;
+        }
+
+        .wave-bar:nth-child(2) { animation-delay: 0.1s; height: 30px; }
+        .wave-bar:nth-child(3) { animation-delay: 0.2s; height: 15px; }
+        .wave-bar:nth-child(4) { animation-delay: 0.3s; height: 25px; }
+        .wave-bar:nth-child(5) { animation-delay: 0.4s; height: 18px; }
+
+        @keyframes wave {
+            0%, 100% { transform: scaleY(1); }
+            50% { transform: scaleY(0.5); }
+        }
+
+        /* ==================== TOAST ==================== */
+
+        .toast-container {
+            position: fixed;
+            top: 70px;
+            left: 16px;
+            right: 16px;
+            z-index: 500;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+        }
+
+        .toast {
+            background: rgba(18, 18, 42, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: toastIn 0.3s ease;
+            backdrop-filter: blur(20px);
+            pointer-events: auto;
+        }
+
+        .toast.success { border-left: 4px solid #10b981; }
+        .toast.error { border-left: 4px solid #f43f5e; }
+        .toast.info { border-left: 4px solid #0ea5e9; }
+        .toast.warning { border-left: 4px solid #f59e0b; }
+
+        .toast-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .toast-message {
+            font-size: 14px;
+            color: #f0ece4;
+            flex: 1;
+        }
+
+        @keyframes toastIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes toastOut {
+            from { transform: translateY(0); opacity: 1; }
+            to { transform: translateY(-20px); opacity: 0; }
+        }
+
+        /* ==================== BOTTOM NAVIGATION ==================== */
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(10, 10, 26, 0.95);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding: 8px 0;
+            padding-bottom: max(8px, env(safe-area-inset-bottom));
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            cursor: pointer;
+            padding: 6px 12px;
+            border-radius: 12px;
+            transition: all 0.2s ease;
+            min-width: 56px;
+        }
+
+        .nav-item:active {
+            transform: scale(0.95);
+        }
+
+        .nav-icon {
+            font-size: 22px;
+            line-height: 1;
+        }
+
+        .nav-label {
+            font-size: 10px;
+            color: #7a7570;
+            font-weight: 500;
+        }
+
+        .nav-item.active .nav-label {
+            color: #6366f1;
+            font-weight: 600;
+        }
+
+        .nav-item.active {
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        /* ==================== EMPTY STATE ==================== */
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #7a7570;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .empty-state h3 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            color: #a0a0a0;
+            margin-bottom: 4px;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+        }
+
+        /* ==================== RESPONSIVE ==================== */
+
+        @media (min-width: 600px) {
+            .stats-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+
+            .modal-content {
+                border-radius: 24px;
+                margin-bottom: 40px;
+            }
+
+            .modal {
+                align-items: center;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .page-header h1 {
+                font-size: 20px;
+            }
+
+            .stat-value {
+                font-size: 18px;
+            }
+
+            .summary-amount {
+                font-size: 26px;
+            }
+        }
+    </style>
 </head>
 <body>
 
@@ -45,18 +1726,11 @@
                         <label>Password</label>
                         <div class="password-wrapper">
                             <input type="password" id="loginPassword" placeholder="Enter password">
-                            <button type="button" class="eye-btn" onclick="togglePassword('loginPassword', this)">
-                                👁️
-                            </button>
+                            <button type="button" class="eye-btn" onclick="togglePassword('loginPassword', this)">👁️</button>
                         </div>
                     </div>
-                    <button id="loginBtn" class="btn btn-primary btn-full" onclick="handleLogin()">
-                        Sign In
-                    </button>
-                    <p class="auth-switch">
-                        Don't have an account?
-                        <a href="#" onclick="showRegister()">Sign Up</a>
-                    </p>
+                    <button id="loginBtn" class="btn btn-primary btn-full" onclick="handleLogin()">Sign In</button>
+                    <p class="auth-switch">Don't have an account? <a href="#" onclick="showRegister()">Sign Up</a></p>
                 </div>
 
                 <!-- Register Form -->
@@ -74,18 +1748,11 @@
                         <label>Password</label>
                         <div class="password-wrapper">
                             <input type="password" id="regPassword" placeholder="Create password">
-                            <button type="button" class="eye-btn" onclick="togglePassword('regPassword', this)">
-                                👁️
-                            </button>
+                            <button type="button" class="eye-btn" onclick="togglePassword('regPassword', this)">👁️</button>
                         </div>
                     </div>
-                    <button id="registerBtn" class="btn btn-primary btn-full" onclick="handleRegister()">
-                        Create Account
-                    </button>
-                    <p class="auth-switch">
-                        Already have an account?
-                        <a href="#" onclick="showLogin()">Sign In</a>
-                    </p>
+                    <button id="registerBtn" class="btn btn-primary btn-full" onclick="handleRegister()">Create Account</button>
+                    <p class="auth-switch">Already have an account? <a href="#" onclick="showLogin()">Sign In</a></p>
                 </div>
             </div>
         </div>
@@ -101,13 +1768,8 @@
                 <span class="topbar-title">FamilyHub</span>
             </div>
             <div class="topbar-right">
-                <div class="notification-bell" onclick="openNotifications()">
-                    🔔
-                    <span id="notifBadge" class="notif-badge" style="display:none;">0</span>
-                </div>
-                <div class="user-avatar" onclick="toggleUserMenu()">
-                    <span id="avatarLetter">A</span>
-                </div>
+                <div class="notification-bell" onclick="openNotifications()">🔔<span id="notifBadge" class="notif-badge" style="display:none;">0</span></div>
+                <div class="user-avatar" onclick="toggleUserMenu()"><span id="avatarLetter">A</span></div>
             </div>
         </div>
 
@@ -121,497 +1783,154 @@
                     <p id="menuUserEmail">user@email.com</p>
                 </div>
                 <div class="menu-items">
-                    <div class="menu-item" onclick="showPage('medicines'); toggleUserMenu();">
-                        💊 Medicines
-                    </div>
-                    <div class="menu-item" onclick="showPage('family'); toggleUserMenu();">
-                        👨‍👩‍👧‍👦 Family
-                    </div>
-                    <div class="menu-item" onclick="openNotifSettings(); toggleUserMenu();">
-                        🔔 Notifications
-                    </div>
-                    <div class="menu-item menu-item-logout" onclick="logout()">
-                        🚪 Sign Out
-                    </div>
+                    <div class="menu-item" onclick="showPage('medicines'); toggleUserMenu();">💊 Medicines</div>
+                    <div class="menu-item" onclick="showPage('family'); toggleUserMenu();">👨‍👩‍👧‍👦 Family</div>
+                    <div class="menu-item" onclick="openNotifSettings(); toggleUserMenu();">🔔 Notifications</div>
+                    <div class="menu-item menu-item-logout" onclick="logout()">🚪 Sign Out</div>
                 </div>
             </div>
         </div>
 
-        <!-- ==================== PAGES ==================== -->
+        <!-- PAGES -->
         <div class="page-container">
 
-            <!-- HOME / DASHBOARD PAGE -->
+            <!-- DASHBOARD -->
             <div id="page-dashboard" class="page active">
                 <div class="page-header">
                     <h1>Dashboard</h1>
                     <select id="familySelect" onchange="onFamilyChange()"></select>
                 </div>
                 <div class="stats-grid">
-                    <div class="stat-card stat-expense">
-                        <div class="stat-icon">💰</div>
-                        <div class="stat-info">
-                            <span id="statExpenses" class="stat-value">₹0</span>
-                            <span class="stat-label">This Month</span>
-                        </div>
-                    </div>
-                    <div class="stat-card stat-shopping">
-                        <div class="stat-icon">🛒</div>
-                        <div class="stat-info">
-                            <span id="statShopping" class="stat-value">0</span>
-                            <span class="stat-label">To Buy</span>
-                        </div>
-                    </div>
-                    <div class="stat-card stat-tasks">
-                        <div class="stat-icon">✅</div>
-                        <div class="stat-info">
-                            <span id="statTasks" class="stat-value">0</span>
-                            <span class="stat-label">Pending Tasks</span>
-                        </div>
-                    </div>
-                    <div class="stat-card stat-meds">
-                        <div class="stat-icon">💊</div>
-                        <div class="stat-info">
-                            <span id="statMeds" class="stat-value">0</span>
-                            <span class="stat-label">Active Medicines</span>
-                        </div>
-                    </div>
+                    <div class="stat-card stat-expense"><div class="stat-icon">💰</div><div class="stat-info"><span id="statExpenses" class="stat-value">₹0</span><span class="stat-label">This Month</span></div></div>
+                    <div class="stat-card stat-shopping"><div class="stat-icon">🛒</div><div class="stat-info"><span id="statShopping" class="stat-value">0</span><span class="stat-label">To Buy</span></div></div>
+                    <div class="stat-card stat-tasks"><div class="stat-icon">✅</div><div class="stat-info"><span id="statTasks" class="stat-value">0</span><span class="stat-label">Pending Tasks</span></div></div>
+                    <div class="stat-card stat-meds"><div class="stat-icon">💊</div><div class="stat-info"><span id="statMeds" class="stat-value">0</span><span class="stat-label">Active Medicines</span></div></div>
                 </div>
-                <div class="dashboard-section">
-                    <h2>Spending by Category</h2>
-                    <div class="chart-container">
-                        <canvas id="categoryChart"></canvas>
-                    </div>
-                </div>
-                <div class="dashboard-section">
-                    <h2>Recent Expenses</h2>
-                    <div id="recentExpenses" class="recent-list"></div>
-                </div>
-                <div class="dashboard-section">
-                    <h2>Family Goals</h2>
-                    <div id="dashboardGoals" class="goals-mini-list"></div>
-                </div>
+                <div class="dashboard-section"><h2>Spending by Category</h2><div class="chart-container"><canvas id="categoryChart"></canvas></div></div>
+                <div class="dashboard-section"><h2>Recent Expenses</h2><div id="recentExpenses" class="recent-list"></div></div>
+                <div class="dashboard-section"><h2>Family Goals</h2><div id="dashboardGoals" class="goals-mini-list"></div></div>
             </div>
 
-            <!-- EXPENSES PAGE -->
+            <!-- EXPENSES -->
             <div id="page-expenses" class="page">
-                <div class="page-header">
-                    <h1>Expenses</h1>
-                    <button class="btn btn-primary" onclick="openAddExpense()">+ Add Expense</button>
-                </div>
-                <div id="expenseSummary" class="expense-summary-card">
-                    <div class="summary-total">
-                        <span class="summary-label">Total This Month</span>
-                        <span id="totalExpenses" class="summary-amount">₹0</span>
-                    </div>
-                </div>
+                <div class="page-header"><h1>Expenses</h1><button class="btn btn-primary" onclick="openAddExpense()">+ Add Expense</button></div>
+                <div id="expenseSummary" class="expense-summary-card"><div class="summary-total"><span class="summary-label">Total This Month</span><span id="totalExpenses" class="summary-amount">₹0</span></div></div>
                 <div id="topCategories" class="top-categories"></div>
                 <div id="expenseList" class="expense-list"></div>
             </div>
 
-            <!-- SHOPPING PAGE -->
+            <!-- SHOPPING -->
             <div id="page-shopping" class="page">
-                <div class="page-header">
-                    <h1>Shopping List</h1>
-                </div>
-
-                <!-- Notification Banner -->
-                <div id="notifBanner" class="notif-banner">
-                    <div class="notif-banner-text">
-                        🔔 Enable notifications to get alerts when items are added
-                    </div>
-                    <button class="btn btn-sm btn-accent" onclick="requestNotifPermission()">Enable</button>
-                </div>
-
-                <!-- Camera/Photo Section -->
-                <div class="photo-section">
-                    <button class="btn btn-camera" onclick="openCamera()">📷 Take Photo</button>
-                    <button class="btn btn-gallery" onclick="openGallery()">🖼️ Upload Photo</button>
-                </div>
+                <div class="page-header"><h1>Shopping List</h1></div>
+                <div id="notifBanner" class="notif-banner"><div class="notif-banner-text">🔔 Enable notifications to get alerts when items are added</div><button class="btn btn-sm btn-accent" onclick="requestNotifPermission()">Enable</button></div>
+                <div class="photo-section"><button class="btn btn-camera" onclick="openCamera()">📷 Take Photo</button><button class="btn btn-gallery" onclick="openGallery()">🖼️ Upload Photo</button></div>
                 <div id="photoGrid" class="photo-grid"></div>
-
-                <!-- Reminder Section -->
-                <div class="reminder-section">
-                    <button class="btn btn-outline btn-sm" onclick="openAddReminder()">⏰ Set Reminder</button>
-                    <div id="reminderList" class="reminder-list"></div>
-                </div>
-
-                <!-- Add Item Form -->
-                <div class="add-item-form">
-                    <input type="text" id="shopItemName" placeholder="Item name..." onkeypress="if(event.key==='Enter') addShopItem()">
-                    <input type="text" id="shopItemQty" placeholder="Qty" value="1" style="width:60px;">
-                    <button class="btn btn-primary" onclick="addShopItem()">Add</button>
-                </div>
-
-                <!-- Shopping Items -->
-                <div id="shopToBuy" class="shop-section">
-                    <h3>🛒 To Buy</h3>
-                    <div id="shopToBuyList" class="shop-list"></div>
-                </div>
-                <div id="shopBought" class="shop-section">
-                    <h3>✅ Bought</h3>
-                    <div id="shopBoughtList" class="shop-list"></div>
-                </div>
+                <div class="reminder-section"><button class="btn btn-outline btn-sm" onclick="openAddReminder()">⏰ Set Reminder</button><div id="reminderList" class="reminder-list"></div></div>
+                <div class="add-item-form"><input type="text" id="shopItemName" placeholder="Item name..." onkeypress="if(event.key==='Enter') addShopItem()"><input type="text" id="shopItemQty" placeholder="Qty" value="1" style="width:60px;"><button class="btn btn-primary" onclick="addShopItem()">Add</button></div>
+                <div id="shopToBuy" class="shop-section"><h3>🛒 To Buy</h3><div id="shopToBuyList" class="shop-list"></div></div>
+                <div id="shopBought" class="shop-section"><h3>✅ Bought</h3><div id="shopBoughtList" class="shop-list"></div></div>
             </div>
 
-            <!-- TASKS PAGE -->
+            <!-- TASKS -->
             <div id="page-tasks" class="page">
-                <div class="page-header">
-                    <h1>Tasks</h1>
-                    <button class="btn btn-primary" onclick="openAddTask()">+ New Task</button>
-                </div>
+                <div class="page-header"><h1>Tasks</h1><button class="btn btn-primary" onclick="openAddTask()">+ New Task</button></div>
                 <div id="taskList" class="task-list"></div>
             </div>
 
-            <!-- GOALS PAGE -->
+            <!-- GOALS -->
             <div id="page-goals" class="page">
-                <div class="page-header">
-                    <h1>Savings Goals</h1>
-                    <button class="btn btn-primary" onclick="openAddGoal()">+ New Goal</button>
-                </div>
+                <div class="page-header"><h1>Savings Goals</h1><button class="btn btn-primary" onclick="openAddGoal()">+ New Goal</button></div>
                 <div id="goalsList" class="goals-list"></div>
             </div>
 
-            <!-- MEDICINES PAGE -->
+            <!-- MEDICINES -->
             <div id="page-medicines" class="page">
-                <div class="page-header">
-                    <h1>Medicines</h1>
-                    <button class="btn btn-primary" onclick="openAddMed()">+ Add Medicine</button>
-                </div>
+                <div class="page-header"><h1>Medicines</h1><button class="btn btn-primary" onclick="openAddMed()">+ Add Medicine</button></div>
                 <div id="medList" class="med-list"></div>
             </div>
 
-            <!-- FAMILY PAGE -->
+            <!-- FAMILY -->
             <div id="page-family" class="page">
-                <div class="page-header">
-                    <h1>Family</h1>
-                </div>
+                <div class="page-header"><h1>Family</h1></div>
                 <div id="familyInfo" class="family-info-card"></div>
                 <div id="membersList" class="members-list"></div>
-                <div class="family-actions">
-                    <button class="btn btn-primary btn-full" onclick="openJoinFamily()">Join with Code</button>
-                    <button class="btn btn-outline btn-full" onclick="openCreateFamily()">Create New Family</button>
-                </div>
+                <div class="family-actions"><button class="btn btn-primary btn-full" onclick="openJoinFamily()">Join with Code</button><button class="btn btn-outline btn-full" onclick="openCreateFamily()">Create New Family</button></div>
             </div>
 
         </div>
 
-        <!-- ==================== BOTTOM NAVIGATION ==================== -->
+        <!-- BOTTOM NAV -->
         <div class="bottom-nav">
-            <div class="nav-item active" onclick="showPage('dashboard')">
-                <span class="nav-icon">📊</span>
-                <span class="nav-label">Home</span>
-            </div>
-            <div class="nav-item" onclick="showPage('expenses')">
-                <span class="nav-icon">💰</span>
-                <span class="nav-label">Money</span>
-            </div>
-            <div class="nav-item" onclick="showPage('shopping')">
-                <span class="nav-icon">🛒</span>
-                <span class="nav-label">Shop</span>
-            </div>
-            <div class="nav-item" onclick="showPage('tasks')">
-                <span class="nav-icon">✅</span>
-                <span class="nav-label">Tasks</span>
-            </div>
-            <div class="nav-item" onclick="showPage('goals')">
-                <span class="nav-icon">🎯</span>
-                <span class="nav-label">Goals</span>
-            </div>
+            <div class="nav-item active" onclick="showPage('dashboard')"><span class="nav-icon">📊</span><span class="nav-label">Home</span></div>
+            <div class="nav-item" onclick="showPage('expenses')"><span class="nav-icon">💰</span><span class="nav-label">Money</span></div>
+            <div class="nav-item" onclick="showPage('shopping')"><span class="nav-icon">🛒</span><span class="nav-label">Shop</span></div>
+            <div class="nav-item" onclick="showPage('tasks')"><span class="nav-icon">✅</span><span class="nav-label">Tasks</span></div>
+            <div class="nav-item" onclick="showPage('goals')"><span class="nav-icon">🎯</span><span class="nav-label">Goals</span></div>
         </div>
     </div>
 
-    <!-- ==================== MODALS ==================== -->
+    <!-- MODALS -->
+    <div id="addExpenseModal" class="modal"><div class="modal-overlay" onclick="closeModal('addExpenseModal')"></div><div class="modal-content"><div class="modal-header"><h2>Add Expense</h2><button class="modal-close" onclick="closeModal('addExpenseModal')">&times;</button></div><div class="form-group"><label>Title</label><input type="text" id="expTitle" placeholder="What did you spend on?"></div><div class="form-group"><label>Amount (₹)</label><input type="number" id="expAmount" placeholder="0.00" inputmode="decimal"></div><div class="form-group"><label>Category</label><select id="expCategory"><option value="Food & Dining">🍔 Food & Dining</option><option value="Groceries">🛒 Groceries</option><option value="Transport">🚗 Transport</option><option value="Utilities">⚡ Utilities</option><option value="Healthcare">🏥 Healthcare</option><option value="Education">📚 Education</option><option value="Shopping">🛍️ Shopping</option><option value="Entertainment">🎬 Entertainment</option><option value="Rent">🏠 Rent</option><option value="Other">📦 Other</option></select></div><div class="form-group"><label>Note (optional)</label><input type="text" id="expNote" placeholder="Any details..."></div><button class="btn btn-primary btn-full" onclick="saveExpense()">Add Expense</button></div></div>
 
-    <!-- Add Expense Modal -->
-    <div id="addExpenseModal" class="modal">
-        <div class="modal-overlay" onclick="closeModal('addExpenseModal')"></div>
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Add Expense</h2>
-                <button class="modal-close" onclick="closeModal('addExpenseModal')">&times;</button>
-            </div>
-            <div class="form-group">
-                <label>Title</label>
-                <input type="text" id="expTitle" placeholder="What did you spend on?">
-            </div>
-            <div class="form-group">
-                <label>Amount (₹)</label>
-                <input type="number" id="expAmount" placeholder="0.00" inputmode="decimal">
-            </div>
-            <div class="form-group">
-                <label>Category</label>
-                <select id="expCategory">
-                    <option value="Food & Dining">🍔 Food & Dining</option>
-                    <option value="Groceries">🛒 Groceries</option>
-                    <option value="Transport">🚗 Transport</option>
-                    <option value="Utilities">⚡ Utilities</option>
-                    <option value="Healthcare">🏥 Healthcare</option>
-                    <option value="Education">📚 Education</option>
-                    <option value="Shopping">🛍️ Shopping</option>
-                    <option value="Entertainment">🎬 Entertainment</option>
-                    <option value="Rent">🏠 Rent</option>
-                    <option value="Other">📦 Other</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Note (optional)</label>
-                <input type="text" id="expNote" placeholder="Any details...">
-            </div>
-            <button class="btn btn-primary btn-full" onclick="saveExpense()">Add Expense</button>
-        </div>
-    </div>
+    <div id="addTaskModal" class="modal"><div class="modal-overlay" onclick="closeModal('addTaskModal')"></div><div class="modal-content"><div class="modal-header"><h2>New Task</h2><button class="modal-close" onclick="closeModal('addTaskModal')">&times;</button></div><div class="form-group"><label>Title</label><input type="text" id="taskTitle" placeholder="What needs to be done?"></div><div class="form-group"><label>Priority</label><select id="taskPriority"><option value="low">🟢 Low</option><option value="medium" selected>🟡 Medium</option><option value="high">🔴 High</option></select></div><div class="form-group"><label>Due Date (optional)</label><input type="date" id="taskDue"></div><button class="btn btn-primary btn-full" onclick="saveTask()">Create Task</button></div></div>
 
-    <!-- Add Task Modal -->
-    <div id="addTaskModal" class="modal">
-        <div class="modal-overlay" onclick="closeModal('addTaskModal')"></div>
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>New Task</h2>
-                <button class="modal-close" onclick="closeModal('addTaskModal')">&times;</button>
-            </div>
-            <div class="form-group">
-                <label>Title</label>
-                <input type="text" id="taskTitle" placeholder="What needs to be done?">
-            </div>
-            <div class="form-group">
-                <label>Priority</label>
-                <select id="taskPriority">
-                    <option value="low">🟢 Low</option>
-                    <option value="medium" selected>🟡 Medium</option>
-                    <option value="high">🔴 High</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Due Date (optional)</label>
-                <input type="date" id="taskDue">
-            </div>
-            <button class="btn btn-primary btn-full" onclick="saveTask()">Create Task</button>
-        </div>
-    </div>
+    <div id="addGoalModal" class="modal"><div class="modal-overlay" onclick="closeModal('addGoalModal')"></div><div class="modal-content"><div class="modal-header"><h2>New Goal</h2><button class="modal-close" onclick="closeModal('addGoalModal')">&times;</button></div><div class="form-group"><label>Goal Name</label><input type="text" id="goalTitle" placeholder="What are you saving for?"></div><div class="form-group"><label>Target Amount (₹)</label><input type="number" id="goalAmount" placeholder="0.00" inputmode="decimal"></div><button class="btn btn-primary btn-full" onclick="saveGoal()">Create Goal</button></div></div>
 
-    <!-- Add Goal Modal -->
-    <div id="addGoalModal" class="modal">
-        <div class="modal-overlay" onclick="closeModal('addGoalModal')"></div>
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>New Goal</h2>
-                <button class="modal-close" onclick="closeModal('addGoalModal')">&times;</button>
-            </div>
-            <div class="form-group">
-                <label>Goal Name</label>
-                <input type="text" id="goalTitle" placeholder="What are you saving for?">
-            </div>
-            <div class="form-group">
-                <label>Target Amount (₹)</label>
-                <input type="number" id="goalAmount" placeholder="0.00" inputmode="decimal">
-            </div>
-            <button class="btn btn-primary btn-full" onclick="saveGoal()">Create Goal</button>
-        </div>
-    </div>
+    <div id="addMedModal" class="modal"><div class="modal-overlay" onclick="closeModal('addMedModal')"></div><div class="modal-content"><div class="modal-header"><h2>Add Medicine</h2><button class="modal-close" onclick="closeModal('addMedModal')">&times;</button></div><div class="form-group"><label>Person Name</label><input type="text" id="medPerson" placeholder="Who takes this medicine?"></div><div class="form-group"><label>Medicine Name</label><input type="text" id="medName" placeholder="Medicine name"></div><div class="form-group"><label>Dosage</label><input type="text" id="medDosage" placeholder="e.g. 1 tablet, 5ml"></div><div class="form-group"><label>Frequency</label><select id="medFreq"><option value="daily">Daily</option><option value="twice daily">Twice Daily</option><option value="thrice daily">Thrice Daily</option><option value="weekly">Weekly</option></select></div><div class="form-group"><label>Time</label><input type="time" id="medTime"></div><button class="btn btn-primary btn-full" onclick="saveMed()">Add Medicine</button></div></div>
 
-    <!-- Add Medicine Modal -->
-    <div id="addMedModal" class="modal">
-        <div class="modal-overlay" onclick="closeModal('addMedModal')"></div>
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Add Medicine</h2>
-                <button class="modal-close" onclick="closeModal('addMedModal')">&times;</button>
-            </div>
-            <div class="form-group">
-                <label>Person Name</label>
-                <input type="text" id="medPerson" placeholder="Who takes this medicine?">
-            </div>
-            <div class="form-group">
-                <label>Medicine Name</label>
-                <input type="text" id="medName" placeholder="Medicine name">
-            </div>
-            <div class="form-group">
-                <label>Dosage</label>
-                <input type="text" id="medDosage" placeholder="e.g. 1 tablet, 5ml">
-            </div>
-            <div class="form-group">
-                <label>Frequency</label>
-                <select id="medFreq">
-                    <option value="daily">Daily</option>
-                    <option value="twice daily">Twice Daily</option>
-                    <option value="thrice daily">Thrice Daily</option>
-                    <option value="weekly">Weekly</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Time</label>
-                <input type="time" id="medTime">
-            </div>
-            <button class="btn btn-primary btn-full" onclick="saveMed()">Add Medicine</button>
-        </div>
-    </div>
+    <div id="addReminderModal" class="modal"><div class="modal-overlay" onclick="closeModal('addReminderModal')"></div><div class="modal-content"><div class="modal-header"><h2>Set Reminder</h2><button class="modal-close" onclick="closeModal('addReminderModal')">&times;</button></div><div class="form-group"><label>Title</label><input type="text" id="remTitle" placeholder="Reminder title" value="Grocery Shopping"></div><div class="form-group"><label>Message</label><input type="text" id="remMessage" placeholder="Reminder message" value="Time for grocery shopping! Check your shopping list."></div><div class="form-group"><label>Date & Time</label><input type="datetime-local" id="remTime"></div><div class="form-group form-checkbox"><input type="checkbox" id="remSpeak" checked><label for="remSpeak">🔊 Speak reminder aloud</label></div><button class="btn btn-sm btn-outline" onclick="testVoice()">🎵 Test Voice</button><button class="btn btn-primary btn-full" onclick="saveReminder()">Set Reminder</button></div></div>
 
-    <!-- Add Reminder Modal -->
-    <div id="addReminderModal" class="modal">
-        <div class="modal-overlay" onclick="closeModal('addReminderModal')"></div>
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Set Reminder</h2>
-                <button class="modal-close" onclick="closeModal('addReminderModal')">&times;</button>
-            </div>
-            <div class="form-group">
-                <label>Title</label>
-                <input type="text" id="remTitle" placeholder="Reminder title" value="Grocery Shopping">
-            </div>
-            <div class="form-group">
-                <label>Message</label>
-                <input type="text" id="remMessage" placeholder="Reminder message" value="Time for grocery shopping! Check your shopping list.">
-            </div>
-            <div class="form-group">
-                <label>Date & Time</label>
-                <input type="datetime-local" id="remTime">
-            </div>
-            <div class="form-group form-checkbox">
-                <input type="checkbox" id="remSpeak" checked>
-                <label for="remSpeak">🔊 Speak reminder aloud</label>
-            </div>
-            <button class="btn btn-sm btn-outline" onclick="testVoice()">🎵 Test Voice</button>
-            <button class="btn btn-primary btn-full" onclick="saveReminder()">Set Reminder</button>
-        </div>
-    </div>
+    <div id="createFamilyModal" class="modal"><div class="modal-overlay" onclick="closeModal('createFamilyModal')"></div><div class="modal-content"><div class="modal-header"><h2>Create Family</h2><button class="modal-close" onclick="closeModal('createFamilyModal')">&times;</button></div><div class="form-group"><label>Family Name</label><input type="text" id="familyName" placeholder="e.g. The Gaikwad Family"></div><button class="btn btn-primary btn-full" onclick="createFamily()">Create Family</button></div></div>
 
-    <!-- Create Family Modal -->
-    <div id="createFamilyModal" class="modal">
-        <div class="modal-overlay" onclick="closeModal('createFamilyModal')"></div>
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Create Family</h2>
-                <button class="modal-close" onclick="closeModal('createFamilyModal')">&times;</button>
-            </div>
-            <div class="form-group">
-                <label>Family Name</label>
-                <input type="text" id="familyName" placeholder="e.g. The Gaikwad Family">
-            </div>
-            <button class="btn btn-primary btn-full" onclick="createFamily()">Create Family</button>
-        </div>
-    </div>
+    <div id="joinFamilyModal" class="modal"><div class="modal-overlay" onclick="closeModal('joinFamilyModal')"></div><div class="modal-content"><div class="modal-header"><h2>Join Family</h2><button class="modal-close" onclick="closeModal('joinFamilyModal')">&times;</button></div><div class="form-group"><label>Invite Code</label><input type="text" id="joinCode" placeholder="Enter invite code"></div><button class="btn btn-primary btn-full" onclick="joinFamily()">Join Family</button></div></div>
 
-    <!-- Join Family Modal -->
-    <div id="joinFamilyModal" class="modal">
-        <div class="modal-overlay" onclick="closeModal('joinFamilyModal')"></div>
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Join Family</h2>
-                <button class="modal-close" onclick="closeModal('joinFamilyModal')">&times;</button>
-            </div>
-            <div class="form-group">
-                <label>Invite Code</label>
-                <input type="text" id="joinCode" placeholder="Enter invite code">
-            </div>
-            <button class="btn btn-primary btn-full" onclick="joinFamily()">Join Family</button>
-        </div>
-    </div>
+    <div id="cameraModal" class="modal"><div class="modal-overlay" onclick="closeCamera()"></div><div class="modal-content camera-modal"><div class="modal-header"><h2>Take Photo</h2><button class="modal-close" onclick="closeCamera()">&times;</button></div><div class="camera-preview"><video id="cameraVideo" autoplay playsinline></video><canvas id="cameraCanvas" style="display:none;"></canvas></div><div class="camera-controls"><button class="btn btn-primary btn-full" onclick="capturePhoto()">📸 Capture</button></div></div></div>
 
-    <!-- Camera Modal -->
-    <div id="cameraModal" class="modal">
-        <div class="modal-overlay" onclick="closeCamera()"></div>
-        <div class="modal-content camera-modal">
-            <div class="modal-header">
-                <h2>Take Photo</h2>
-                <button class="modal-close" onclick="closeCamera()">&times;</button>
-            </div>
-            <div class="camera-preview">
-                <video id="cameraVideo" autoplay playsinline></video>
-                <canvas id="cameraCanvas" style="display:none;"></canvas>
-            </div>
-            <div class="camera-controls">
-                <button class="btn btn-primary btn-full" onclick="capturePhoto()">📸 Capture</button>
-            </div>
-        </div>
-    </div>
+    <div id="photoViewer" class="modal"><div class="modal-overlay" onclick="closeModal('photoViewer')"></div><div class="modal-content photo-viewer-content"><div class="modal-header"><h2 id="photoViewerTitle">Photo</h2><button class="modal-close" onclick="closeModal('photoViewer')">&times;</button></div><div class="photo-viewer-body"><img id="photoViewerImg" src="" alt="Photo"></div></div></div>
 
-    <!-- Photo Viewer Modal -->
-    <div id="photoViewer" class="modal">
-        <div class="modal-overlay" onclick="closeModal('photoViewer')"></div>
-        <div class="modal-content photo-viewer-content">
-            <div class="modal-header">
-                <h2 id="photoViewerTitle">Photo</h2>
-                <button class="modal-close" onclick="closeModal('photoViewer')">&times;</button>
-            </div>
-            <div class="photo-viewer-body">
-                <img id="photoViewerImg" src="" alt="Photo">
-            </div>
-        </div>
-    </div>
+    <div id="notifPanel" class="modal"><div class="modal-overlay" onclick="closeModal('notifPanel')"></div><div class="modal-content"><div class="modal-header"><h2>Notifications</h2><button class="modal-close" onclick="closeModal('notifPanel')">&times;</button></div><div id="notifList" class="notif-list-panel"></div></div></div>
 
-    <!-- Notifications Panel -->
-    <div id="notifPanel" class="modal">
-        <div class="modal-overlay" onclick="closeModal('notifPanel')"></div>
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Notifications</h2>
-                <button class="modal-close" onclick="closeModal('notifPanel')">&times;</button>
-            </div>
-            <div id="notifList" class="notif-list-panel"></div>
-        </div>
-    </div>
+    <div id="notifSettingsModal" class="modal"><div class="modal-overlay" onclick="closeModal('notifSettingsModal')"></div><div class="modal-content"><div class="modal-header"><h2>Notification Settings</h2><button class="modal-close" onclick="closeModal('notifSettingsModal')">&times;</button></div><div class="form-group"><p>Current status: <strong id="notifPermStatus">Unknown</strong></p></div><button class="btn btn-primary btn-full" onclick="requestNotifPermission()">Enable Notifications</button></div></div>
 
-    <!-- Notification Settings Modal -->
-    <div id="notifSettingsModal" class="modal">
-        <div class="modal-overlay" onclick="closeModal('notifSettingsModal')"></div>
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Notification Settings</h2>
-                <button class="modal-close" onclick="closeModal('notifSettingsModal')">&times;</button>
-            </div>
-            <div class="form-group">
-                <p>Current status: <strong id="notifPermStatus">Unknown</strong></p>
-            </div>
-            <button class="btn btn-primary btn-full" onclick="requestNotifPermission()">Enable Notifications</button>
-        </div>
-    </div>
-
-    <!-- Alert Overlay for Reminders -->
+    <!-- Alert Overlay -->
     <div id="alertOverlay" class="alert-overlay" style="display:none;">
         <div class="alert-card">
             <div class="alert-icon">🔔</div>
             <h2 id="alertTitle">Reminder!</h2>
             <p id="alertMessage">Time for grocery shopping!</p>
             <p id="alertItemCount" class="alert-item-count"></p>
-            <div id="alertSpeaking" class="speaking-animation" style="display:none;">
-                <div class="wave-bar"></div>
-                <div class="wave-bar"></div>
-                <div class="wave-bar"></div>
-                <div class="wave-bar"></div>
-                <div class="wave-bar"></div>
-                <span>Speaking...</span>
-            </div>
+            <div id="alertSpeaking" class="speaking-animation" style="display:none;"><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><span>Speaking...</span></div>
             <button class="btn btn-primary btn-full" onclick="dismissAlert()">Dismiss</button>
         </div>
     </div>
 
-    <!-- Toast Container -->
+    <!-- Toast -->
     <div id="toastContainer" class="toast-container"></div>
 
-    <!-- Hidden file input for gallery -->
+    <!-- Hidden file input -->
     <input type="file" id="galleryInput" accept="image/*" style="display:none;" onchange="handleGallerySelect(event)">
 
-    <!-- Scripts -->
-    <script src="/static/api.js"></script>
-    <script src="/static/login.js"></script>
-    <script src="/static/dashboard.js"></script>
-    <script src="/static/expenses.js"></script>
-    <script src="/static/shopping.js"></script>
-    <script src="/static/tasks.js"></script>
-    <script src="/static/medicines.js"></script>
-    <script src="/static/goals.js"></script>
-    <script src="/static/family.js"></script>
-    <script src="/static/notifications.js"></script>
-    <script src="/static/app.js"></script>
+    <!-- Scripts with ABSOLUTE URLs for APK WebView -->
+    <script src="https://familyhub-1u10.onrender.com/static/api.js"></script>
+    <script src="https://familyhub-1u10.onrender.com/static/login.js"></script>
+    <script src="https://familyhub-1u10.onrender.com/static/dashboard.js"></script>
+    <script src="https://familyhub-1u10.onrender.com/static/expenses.js"></script>
+    <script src="https://familyhub-1u10.onrender.com/static/shopping.js"></script>
+    <script src="https://familyhub-1u10.onrender.com/static/tasks.js"></script>
+    <script src="https://familyhub-1u10.onrender.com/static/medicines.js"></script>
+    <script src="https://familyhub-1u10.onrender.com/static/goals.js"></script>
+    <script src="https://familyhub-1u10.onrender.com/static/family.js"></script>
+    <script src="https://familyhub-1u10.onrender.com/static/notifications.js"></script>
+    <script src="https://familyhub-1u10.onrender.com/static/app.js"></script>
 
-    <!-- Service Worker Registration -->
+    <!-- Service Worker -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
-                navigator.serviceWorker.register('/sw.js').then(function(reg) {
-                    console.log('ServiceWorker registered:', reg.scope);
+                navigator.serviceWorker.register('https://familyhub-1u10.onrender.com/sw.js').then(function(reg) {
+                    console.log('SW registered:', reg.scope);
                 }).catch(function(err) {
-                    console.log('ServiceWorker registration failed:', err);
+                    console.log('SW failed:', err);
                 });
             });
         }
