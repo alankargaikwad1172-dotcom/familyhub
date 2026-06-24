@@ -1884,3 +1884,43 @@ body {
         padding: 10px;
     }
 }
+/* ==================== PASSWORD TOGGLE ==================== */
+
+.password-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-wrapper input {
+    padding-right: 50px;
+    width: 100%;
+}
+
+.eye-btn {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    padding: 6px;
+    border-radius: 8px;
+    transition: background 0.2s ease;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+}
+
+.eye-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.eye-btn:active {
+    background: rgba(255, 255, 255, 0.2);
+}
