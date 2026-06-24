@@ -1,77 +1,147 @@
-/*
- * api.js
- * Talks to the backend server.
- * Every page uses this to send and receive data.
- */
-var API = {
-    BASE: '/api',
+// ==================== API CONFIGURATION ====================
 
-    getToken: function() {
-        return localStorage.getItem('token');
-    },
+var API_BASE = "https://familyhub-1u10.onrender.com";
 
-    setToken: function(token) {
-        localStorage.setItem('token', token);
-    },
+// ==================== API FUNCTIONS ====================
 
-    clearToken: function() {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-    },
+function getToken() {
+    return localStorage.getItem("token");
+}
 
-    setUser: function(user) {
-        localStorage.setItem('user', JSON.stringify(user));
-    },
+function apiGet(endpoint) {
+    var token = getToken();
+    var url = API_BASE + endpoint;
 
-    getUser: function() {
-        var d = localStorage.getItem('user');
-        return d ? JSON.parse(d) : null;
-    },
-
-    request: function(method, path, body) {
-        var self = this;
-        var options = {
-            method: method,
-            headers: { 'Content-Type': 'application/json' }
-        };
-        var token = this.getToken();
-        if (token) {
-            options.headers['Authorization'] = 'Bearer ' + token;
+    return fetch(url, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": token ? "Bearer " + token : ""
         }
-        if (body) {
-            options.body = JSON.stringify(body);
+    }).then(function(response) {
+        if (!response.ok) {
+            if (response.status === 401) {
+                localStorage.removeItem("token");
+                window.location.reload();
+            }
+            throw new Error("Request failed: " + response.status);
         }
-        return fetch(this.BASE + path, options)
-            .then(function(response) {
-                return response.json().then(function(data) {
-                    if (!response.ok) {
-                        throw new Error(data.detail || 'Something went wrong');
-                    }
-                    return data;
-                });
-            })
-            .catch(function(error) {
-                if (error.message === 'Invalid or expired token') {
-                    self.clearToken();
-                    window.location.reload();
-                }
-                throw error;
-            });
-    },
+        return response.json();
+    });
+}
 
-    get: function(path) {
-        return this.request('GET', path);
-    },
+function apiPost(endpoint, data) {
+    var token = getToken();
+    var url = API_BASE + endpoint;
 
-    post: function(path, data) {
-        return this.request('POST', path, data);
-    },
+    return fetch(url, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": token ? "Bearer " + token : ""
+        },
+        body: JSON.stringify(data)
+    }).then(function(response) {
+        if (!response.ok) {
+            if (response.status === 401) {
+                localStorage.removeItem("token");
+                window.location.reload();
+            }
+            throw new Error("Request failed: " + response.status);
+        }
+        return response.json();
+    });
+}
 
-    put: function(path, data) {
-        return this.request('PUT', path, data);
-    },
+function apiPut(endpoint, data) {
+    var token = getToken();
+    var url = API_BASE + endpoint;
 
-    del: function(path) {
-        return this.request('DELETE', path);
-    }
-};
+    return fetch(url, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": token ? "Bearer " + token : ""
+        },
+        body: JSON.stringify(data)
+    }).then(function(response) {
+        if (!response.ok) {
+            throw new Error("Request failed: " + response.status);
+        }
+        return response.json();
+    });
+}
+
+function apiDelete(endpoint) {
+    var token = getToken();
+    var url = API_BASE + endpoint;
+
+    return fetch(url, {
+        method: "DELETE",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": token ? "Bearer " + token : ""
+        }
+    }).then(function(response) {
+        if (!response.ok) {
+            throw new Error("Request failed: " + response.status);
+        }
+        return response.json();
+    });
+}
+
+function apiUpload(endpoint, formData) {
+    var token = getToken();
+    var url = API_BASE + endpoint;
+
+    return fetch(url, {
+        method: "POST",
+        headers: {
+            "Authorization": token ? "Bearer " + token : ""
+        },
+        body: formData
+    }).then(function(response) {
+        if (!response.ok) {
+            throw new Error("Upload failed: " + response.status);
+        }
+        return response.json();
+    });
+}
+
+// ==================== IMAGE URL HELPER ====================
+
+function getImageUrl(path) {
+    if (!path) return "";
+    if (path.startsWith("http")) return path;
+    return API_BASE + path;
+}
+
+// ==================== TOAST NOTIFICATIONS ====================
+
+function showToast(message, type) {
+    type = type || "info";
+    var container = document.getElementById("toastContainer");
+    if (!container) return;
+
+    var icons = {
+        success: "✅",
+        error: "❌",
+        info: "ℹ️",
+        warning: "⚠️"
+    };
+
+    var toast = document.createElement("div");
+    toast.className = "toast " + type;
+    toast.innerHTML = '<span class="toast-icon">' + (icons[type] || icons.info) + '</span><span class="toast-message">' + message + '</span>';
+
+    container.appendChild(toast);
+
+    setTimeout(function() {
+        toast.style.animation = "toastOut 0.3s ease forwards";
+        setTimeout(function() {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 300);
+    }, 3000);
+}

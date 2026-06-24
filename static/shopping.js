@@ -1,326 +1,738 @@
-/*
- * shopping.js
- * Shopping list with camera, gallery, notifications, and voice reminders.
- */
+// ==================== SHOPPING LIST ====================
 
-var capturedPhotoBlob = null;
+var shopItems = [];
+var shopImages = [];
+var shopReminders = [];
 var cameraStream = null;
+var lastNotifiedId = 0;
 
-function renderShopping(container) {
-    Promise.all([
-        API.get('/shopping/' + currentFamilyId),
-        API.get('/images/shopping/' + currentFamilyId),
-        API.get('/reminders/' + currentFamilyId)
-    ]).then(function(results) {
-        var items = results[0];
-        var photos = results[1];
-        var reminders = results[2];
-        var unbought = [], bought = [];
-        for (var x = 0; x < items.length; x++) {
-            if (items[x].is_bought) bought.push(items[x]);
-            else unbought.push(items[x]);
-        }
+// ==================== LOAD SHOPPING DATA ====================
 
-        var html = '';
-        html += '<div class="page-header"><div><h1 class="page-title">Shopping List</h1><p class="page-subtitle">' + unbought.length + ' items to buy &bull; ' + photos.length + ' photos</p></div></div>';
+function loadShoppingData() {
+    if (!window.currentFamilyId) return;
 
-        // NOTIFICATION BANNER
-        if ('Notification' in window && Notification.permission !== 'granted') {
-            html += '<div class="notif-banner">';
-            html += '<div class="notif-banner-icon">&#128276;</div>';
-            html += '<div class="notif-banner-text"><h4>Get notified instantly</h4><p>Enable notifications to know when family members add items</p></div>';
-            html += '<button class="btn btn-primary btn-sm" onclick="requestNotificationPermission(); navigateTo(\'shopping\');">Enable</button>';
-            html += '</div>';
-        }
-
-        // CAMERA & GALLERY
-        html += '<div class="photo-actions">';
-        html += '<button class="btn btn-take-photo" onclick="openCamera()">&#128248; Take Photo</button>';
-        html += '<button class="btn btn-gallery" onclick="openGalleryPicker()">&#128444; Upload Photo</button>';
-        html += '<input type="file" id="gallery-file-input" class="hidden-file-input" accept="image/*" onchange="handleGallerySelect(event)">';
-        html += '</div>';
-
-        // REMINDERS
-        html += '<div class="reminder-section">';
-        html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">';
-        html += '<h3 style="font-size:15px;font-weight:600;">&#128276; Reminders</h3>';
-        html += '<button class="btn btn-amber btn-sm" onclick="openSetReminder()">+ Set Reminder</button>';
-        html += '</div>';
-        if (reminders.length > 0) {
-            for (var r = 0; r < reminders.length; r++) {
-                var rem = reminders[r];
-                var remDate = new Date(rem.remind_at);
-                var timeStr = remDate.toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-                html += '<div class="reminder-card" style="animation-delay:' + (r * 0.05) + 's">';
-                html += '<span class="reminder-time">\u23F0 ' + timeStr + '</span>';
-                html += '<span class="reminder-text">' + rem.title + '</span>';
-                if (rem.speak) html += '<span class="reminder-speak-icon">\uD83D\uDD0A</span>';
-                html += '<button class="btn-delete" onclick="deleteReminder(' + rem.id + ')" style="color:var(--amber);">&#10005;</button>';
-                html += '</div>';
-            }
-        } else {
-            html += '<p style="color:var(--text-muted);font-size:13px;">No upcoming reminders. Set one for a spoken alert!</p>';
-        }
-        html += '</div>';
-
-        // PHOTOS
-        if (photos.length > 0) {
-            html += '<div class="list-card" style="margin-bottom:20px;"><h3>\u{1F4F7} Grocery Photos (' + photos.length + ')</h3>';
-            html += '<div class="photo-grid">';
-            for (var p = 0; p < photos.length; p++) {
-                var photo = photos[p];
-                html += '<div class="photo-card" onclick="viewImage(\'' + photo.url + '\',\'' + escapeHtml(photo.caption) + '\')" style="animation-delay:' + (p * 0.05) + 's">';
-                html += '<img src="' + photo.url + '" alt="' + escapeHtml(photo.caption) + '" loading="lazy">';
-                html += '<div class="photo-overlay"><div class="photo-caption">' + escapeHtml(photo.caption) + '</div><div class="photo-by">by ' + photo.uploaded_by + '</div></div>';
-                html += '<button class="btn-delete-photo" onclick="event.stopPropagation();deletePhoto(' + photo.id + ')">&#10005;</button>';
-                html += '</div>';
-            }
-            html += '</div></div>';
-        }
-
-        // ADD ITEM FORM
-        html += '<div class="add-form"><input type="text" id="shop-item-name" placeholder="Add an item... (e.g., Rice 5kg)" onkeypress="if(event.key===\'Enter\')addShoppingItem()"><button class="btn btn-primary" onclick="addShoppingItem()">Add</button></div>';
-
-        // UNBOUGHT
-        html += '<div class="list-card" style="margin-bottom:16px;"><h3>\u{1F6D2} To Buy (' + unbought.length + ')</h3>';
-        if (unbought.length > 0) {
-            for (var i = 0; i < unbought.length; i++) {
-                var item = unbought[i];
-                html += '<div class="list-item" style="animation-delay:' + (i * 0.04) + 's">';
-                html += '<button class="item-check" onclick="toggleBought(' + item.id + ',true)">&#10003;</button>';
-                html += '<div class="item-info"><div class="item-title">' + item.name + '</div><div class="item-meta">' + item.quantity + ' &bull; ' + item.category + '</div></div>';
-                html += '<button class="btn-delete" onclick="deleteShopItem(' + item.id + ')">&#128465;</button>';
-                html += '</div>';
-            }
-        } else {
-            html += '<div class="empty-state"><p>All done! Nothing to buy.</p></div>';
-        }
-        html += '</div>';
-
-        // BOUGHT
-        if (bought.length > 0) {
-            html += '<div class="list-card"><h3>\u2705 Bought (' + bought.length + ')</h3>';
-            for (var j = 0; j < bought.length; j++) {
-                var b = bought[j];
-                html += '<div class="list-item" style="opacity:0.5;">';
-                html += '<button class="item-check checked" onclick="toggleBought(' + b.id + ',false)">&#10003;</button>';
-                html += '<div class="item-info"><div class="item-title" style="text-decoration:line-through;">' + b.name + '</div><div class="item-meta">' + b.quantity + '</div></div>';
-                html += '<button class="btn-delete" onclick="deleteShopItem(' + b.id + ')">&#128465;</button>';
-                html += '</div>';
-            }
-            html += '</div>';
-        }
-
-        container.innerHTML = html;
+    // Load items
+    apiGet("/api/shopping/" + window.currentFamilyId).then(function(items) {
+        shopItems = items || [];
+        renderShopItems();
     }).catch(function(err) {
-        console.error(err);
-        container.innerHTML = '<div class="empty-state"><p>Failed to load</p></div>';
+        console.log("Failed to load shopping items:", err);
+    });
+
+    // Load images
+    apiGet("/api/images/shopping/" + window.currentFamilyId).then(function(images) {
+        shopImages = images || [];
+        renderShopImages();
+    }).catch(function(err) {
+        console.log("Failed to load images:", err);
+    });
+
+    // Load reminders
+    apiGet("/api/reminders/" + window.currentFamilyId).then(function(reminders) {
+        shopReminders = reminders || [];
+        renderReminders();
+    }).catch(function(err) {
+        console.log("Failed to load reminders:", err);
     });
 }
 
-function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+// ==================== ADD SHOPPING ITEM ====================
+
+function addShopItem() {
+    var nameInput = document.getElementById("shopItemName");
+    var qtyInput = document.getElementById("shopItemQty");
+
+    var name = nameInput.value.trim();
+    var qty = qtyInput.value.trim() || "1";
+
+    if (!name) {
+        showToast("Enter an item name", "warning");
+        nameInput.focus();
+        return;
+    }
+
+    apiPost("/api/shopping", {
+        family_id: window.currentFamilyId,
+        name: name,
+        quantity: qty,
+        category: "General"
+    }).then(function(data) {
+        nameInput.value = "";
+        qtyInput.value = "1";
+        showToast("Added: " + name, "success");
+        loadShoppingData();
+    }).catch(function(err) {
+        showToast("Failed to add item", "error");
+    });
+}
+
+// ==================== RENDER SHOPPING ITEMS ====================
+
+function renderShopItems() {
+    var toBuyList = document.getElementById("shopToBuyList");
+    var boughtList = document.getElementById("shopBoughtList");
+
+    if (!toBuyList || !boughtList) return;
+
+    var toBuy = [];
+    var bought = [];
+
+    for (var i = 0; i < shopItems.length; i++) {
+        if (shopItems[i].is_bought) {
+            bought.push(shopItems[i]);
+        } else {
+            toBuy.push(shopItems[i]);
+        }
+    }
+
+    // Render To Buy
+    if (toBuy.length === 0) {
+        toBuyList.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🛒</div><h3>Nothing to buy</h3><p>Add items above</p></div>';
+    } else {
+        var html = "";
+        for (var j = 0; j < toBuy.length; j++) {
+            var item = toBuy[j];
+            html += '<div class="shop-item">';
+            html += '<button class="shop-item-check" onclick="toggleBought(' + item.id + ', true)"></button>';
+            html += '<div class="shop-item-info">';
+            html += '<div class="shop-item-name">' + escapeHtml(item.name) + '</div>';
+            html += '<div class="shop-item-qty">Qty: ' + escapeHtml(item.quantity) + '</div>';
+            html += '</div>';
+            html += '<button class="shop-item-delete" onclick="deleteShopItem(' + item.id + ')">🗑️</button>';
+            html += '</div>';
+        }
+        toBuyList.innerHTML = html;
+    }
+
+    // Render Bought
+    if (bought.length === 0) {
+        boughtList.innerHTML = '<div class="empty-state" style="padding:20px;"><p>No items bought yet</p></div>';
+    } else {
+        var html2 = "";
+        for (var k = 0; k < bought.length; k++) {
+            var item2 = bought[k];
+            html2 += '<div class="shop-item bought">';
+            html2 += '<button class="shop-item-check checked" onclick="toggleBought(' + item2.id + ', false)">✓</button>';
+            html2 += '<div class="shop-item-info">';
+            html2 += '<div class="shop-item-name">' + escapeHtml(item2.name) + '</div>';
+            html2 += '<div class="shop-item-qty">Qty: ' + escapeHtml(item2.quantity) + '</div>';
+            html2 += '</div>';
+            html2 += '<button class="shop-item-delete" onclick="deleteShopItem(' + item2.id + ')">🗑️</button>';
+            html2 += '</div>';
+        }
+        boughtList.innerHTML = html2;
+    }
+}
+
+// ==================== TOGGLE BOUGHT ====================
+
+function toggleBought(itemId, isBought) {
+    apiPut("/api/shopping/" + itemId, {
+        is_bought: isBought
+    }).then(function() {
+        loadShoppingData();
+    }).catch(function(err) {
+        showToast("Failed to update", "error");
+    });
+}
+
+// ==================== DELETE SHOPPING ITEM ====================
+
+function deleteShopItem(itemId) {
+    apiDelete("/api/shopping/" + itemId).then(function() {
+        showToast("Item deleted", "info");
+        loadShoppingData();
+    }).catch(function(err) {
+        showToast("Failed to delete", "error");
+    });
+}
+
+// ==================== RENDER SHOPPING IMAGES ====================
+
+function renderShopImages() {
+    var grid = document.getElementById("photoGrid");
+    if (!grid) return;
+
+    if (shopImages.length === 0) {
+        grid.innerHTML = "";
+        return;
+    }
+
+    var html = "";
+    for (var i = 0; i < shopImages.length; i++) {
+        var img = shopImages[i];
+        var imgUrl = getImageUrl(img.url);
+        html += '<div class="photo-thumb">';
+        html += '<img src="' + imgUrl + '" alt="' + escapeHtml(img.caption || "Photo") + '" onclick="viewPhoto(\'' + imgUrl + '\', \'' + escapeHtml(img.caption || "Photo") + '\')">';
+        html += '<button class="photo-thumb-delete" onclick="deleteImage(' + img.id + ')">✕</button>';
+        html += '</div>';
+    }
+    grid.innerHTML = html;
 }
 
 // ==================== CAMERA ====================
 
 function openCamera() {
-    capturedPhotoBlob = null;
-    document.getElementById('camera-overlay').classList.remove('hidden');
-    document.getElementById('camera-video').classList.remove('hidden');
-    document.getElementById('camera-preview').classList.add('hidden');
-    document.getElementById('btn-capture').classList.remove('hidden');
-    document.getElementById('btn-retake').classList.add('hidden');
-    document.getElementById('btn-upload-cam').classList.add('hidden');
-    var video = document.getElementById('camera-video');
+    var modal = document.getElementById("cameraModal");
+    modal.classList.add("open");
+
+    var video = document.getElementById("cameraVideo");
+
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false })
-            .then(function(stream) { cameraStream = stream; video.srcObject = stream; })
-            .catch(function(err) { console.error(err); showToast('Cannot access camera', 'error'); closeCamera(); });
-    } else { showToast('Camera not supported', 'error'); closeCamera(); }
-}
-
-function capturePhoto() {
-    var video = document.getElementById('camera-video');
-    var canvas = document.getElementById('camera-canvas');
-    var preview = document.getElementById('camera-preview');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    canvas.getContext('2d').drawImage(video, 0, 0);
-    preview.src = canvas.toDataURL('image/jpeg', 0.85);
-    preview.classList.remove('hidden');
-    video.classList.add('hidden');
-    canvas.toBlob(function(blob) { capturedPhotoBlob = blob; }, 'image/jpeg', 0.85);
-    document.getElementById('btn-capture').classList.add('hidden');
-    document.getElementById('btn-retake').classList.remove('hidden');
-    document.getElementById('btn-upload-cam').classList.remove('hidden');
-}
-
-function retakePhoto() {
-    capturedPhotoBlob = null;
-    document.getElementById('camera-video').classList.remove('hidden');
-    document.getElementById('camera-preview').classList.add('hidden');
-    document.getElementById('btn-capture').classList.remove('hidden');
-    document.getElementById('btn-retake').classList.add('hidden');
-    document.getElementById('btn-upload-cam').classList.add('hidden');
+        navigator.mediaDevices.getUserMedia({
+            video: {
+                facingMode: "environment",
+                width: { ideal: 1280 },
+                height: { ideal: 960 }
+            }
+        }).then(function(stream) {
+            cameraStream = stream;
+            video.srcObject = stream;
+        }).catch(function(err) {
+            console.log("Camera error:", err);
+            showToast("Cannot access camera", "error");
+            closeCamera();
+        });
+    } else {
+        showToast("Camera not supported", "error");
+        closeCamera();
+    }
 }
 
 function closeCamera() {
-    if (cameraStream) { cameraStream.getTracks().forEach(function(t) { t.stop(); }); cameraStream = null; }
-    document.getElementById('camera-video').srcObject = null;
-    capturedPhotoBlob = null;
-    document.getElementById('camera-overlay').classList.add('hidden');
+    var modal = document.getElementById("cameraModal");
+    modal.classList.remove("open");
+
+    if (cameraStream) {
+        var tracks = cameraStream.getTracks();
+        for (var i = 0; i < tracks.length; i++) {
+            tracks[i].stop();
+        }
+        cameraStream = null;
+    }
+
+    var video = document.getElementById("cameraVideo");
+    video.srcObject = null;
 }
 
-function uploadCapturedPhoto() {
-    if (!capturedPhotoBlob) { showToast('No photo captured', 'error'); return; }
-    uploadPhotoFile(new File([capturedPhotoBlob], 'camera-photo.jpg', { type: 'image/jpeg' }), 'Photo from camera');
+function capturePhoto() {
+    var video = document.getElementById("cameraVideo");
+    var canvas = document.getElementById("cameraCanvas");
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    var ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0);
+
+    canvas.toBlob(function(blob) {
+        if (!blob) {
+            showToast("Failed to capture", "error");
+            return;
+        }
+
+        var file = new File([blob], "camera_" + Date.now() + ".jpg", { type: "image/jpeg" });
+        uploadImage(file);
+        closeCamera();
+    }, "image/jpeg", 0.8);
 }
 
-// ==================== GALLERY ====================
+// ==================== GALLERY UPLOAD ====================
 
-function openGalleryPicker() {
-    document.getElementById('gallery-file-input').click();
+function openGallery() {
+    var input = document.getElementById("galleryInput");
+    input.click();
 }
 
 function handleGallerySelect(event) {
     var file = event.target.files[0];
     if (!file) return;
-    if (!file.type.startsWith('image/')) { showToast('Select an image file', 'error'); return; }
-    if (file.size > 10 * 1024 * 1024) { showToast('Max 10MB', 'error'); return; }
-    uploadPhotoFile(file, file.name);
-    event.target.value = '';
+
+    if (file.size > 10 * 1024 * 1024) {
+        showToast("File too large (max 10MB)", "error");
+        return;
+    }
+
+    uploadImage(file);
+    event.target.value = "";
 }
 
-// ==================== UPLOAD ====================
+// ==================== UPLOAD IMAGE ====================
 
-function uploadPhotoFile(file, caption) {
-    showToast('Uploading photo...', 'info');
+function uploadImage(file) {
     var formData = new FormData();
-    formData.append('file', file);
-    var token = API.getToken();
-    fetch('/api/images/shopping/' + currentFamilyId + '?caption=' + encodeURIComponent(caption), {
-        method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + token },
-        body: formData
-    }).then(function(response) {
-        return response.json().then(function(data) {
-            if (!response.ok) throw new Error(data.detail || 'Upload failed');
-            return data;
-        });
-    }).then(function() {
-        closeCamera();
-        showToast('Photo uploaded!');
-        navigateTo('shopping');
-    }).catch(function(error) { showToast(error.message, 'error'); });
+    formData.append("file", file);
+    formData.append("caption", file.name);
+
+    showToast("Uploading photo...", "info");
+
+    apiUpload("/api/images/shopping/" + window.currentFamilyId, formData).then(function(data) {
+        showToast("Photo uploaded!", "success");
+        loadShoppingData();
+    }).catch(function(err) {
+        showToast("Upload failed", "error");
+    });
 }
 
-// ==================== VIEW & DELETE ====================
+// ==================== VIEW PHOTO ====================
 
-function viewImage(url, caption) {
-    document.getElementById('viewer-image').src = url;
-    document.getElementById('viewer-caption').textContent = caption || '';
-    document.getElementById('image-viewer-overlay').classList.remove('hidden');
+function viewPhoto(url, caption) {
+    var modal = document.getElementById("photoViewer");
+    var img = document.getElementById("photoViewerImg");
+    var title = document.getElementById("photoViewerTitle");
+
+    img.src = url;
+    title.textContent = caption || "Photo";
+
+    modal.classList.add("open");
 }
 
-function closeImageViewer() {
-    document.getElementById('image-viewer-overlay').classList.add('hidden');
-    document.getElementById('viewer-image').src = '';
-}
+// ==================== DELETE IMAGE ====================
 
-function deletePhoto(id) {
-    if (!confirm('Delete this photo?')) return;
-    API.del('/images/' + id)
-        .then(function() { showToast('Deleted'); navigateTo('shopping'); })
-        .catch(function(e) { showToast(e.message, 'error'); });
+function deleteImage(imageId) {
+    apiDelete("/api/images/" + imageId).then(function() {
+        showToast("Photo deleted", "info");
+        loadShoppingData();
+    }).catch(function(err) {
+        showToast("Failed to delete", "error");
+    });
 }
 
 // ==================== REMINDERS ====================
 
-function openSetReminder() {
+function openAddReminder() {
+    var modal = document.getElementById("addReminderModal");
+    modal.classList.add("open");
+
+    // Set default time to 1 hour from now
     var now = new Date();
     now.setHours(now.getHours() + 1);
-    var defaultDate = now.toISOString().slice(0, 10);
-    var defaultTime = now.toTimeString().slice(0, 5);
-
-    showModal(
-        '<h3>\u23F0 Set Reminder</h3>' +
-        '<div class="form-group"><label>Title</label><input type="text" id="rem-title" value="Grocery Shopping" placeholder="Reminder title"></div>' +
-        '<div class="form-group"><label>Message</label><input type="text" id="rem-message" value="Time for grocery shopping! Check your shopping list." placeholder="What should I say?"></div>' +
-        '<div class="form-group"><label>Date</label><input type="date" id="rem-date" value="' + defaultDate + '"></div>' +
-        '<div class="form-group"><label>Time</label><input type="time" id="rem-time" value="' + defaultTime + '"></div>' +
-        '<div class="form-group" style="display:flex;align-items:center;gap:10px;">' +
-        '<input type="checkbox" id="rem-speak" checked style="width:20px;height:20px;accent-color:var(--primary);">' +
-        '<label for="rem-speak" style="margin:0;font-size:14px;">Speak reminder aloud (\uD83D\uDD0A)</label>' +
-        '</div>' +
-        '<div class="form-group">' +
-        '<button class="btn btn-secondary btn-sm btn-full" onclick="testSpeech()" type="button">\u{1F50A} Test Voice</button>' +
-        '</div>' +
-        '<div class="modal-actions">' +
-        '<button class="btn btn-secondary" onclick="closeModal()">Cancel</button>' +
-        '<button class="btn btn-primary" onclick="submitReminder()">Set Reminder</button>' +
-        '</div>'
-    );
+    var dateStr = now.toISOString().slice(0, 16);
+    document.getElementById("remTime").value = dateStr;
 }
 
-function testSpeech() {
-    var msg = document.getElementById('rem-message').value || 'Time for grocery shopping! Check your shopping list.';
-    NotificationSystem.speakTest(msg);
-}
+function saveReminder() {
+    var title = document.getElementById("remTitle").value.trim();
+    var message = document.getElementById("remMessage").value.trim();
+    var remindAt = document.getElementById("remTime").value;
+    var speak = document.getElementById("remSpeak").checked;
 
-function submitReminder() {
-    var title = document.getElementById('rem-title').value.trim();
-    var message = document.getElementById('rem-message').value.trim();
-    var date = document.getElementById('rem-date').value;
-    var time = document.getElementById('rem-time').value;
-    var speak = document.getElementById('rem-speak').checked;
+    if (!title || !remindAt) {
+        showToast("Fill in title and time", "warning");
+        return;
+    }
 
-    if (!title || !date || !time) { showToast('Fill in all fields', 'error'); return; }
-
-    var remindAt = date + 'T' + time + ':00';
-    var remindDate = new Date(remindAt);
-    if (remindDate <= new Date()) { showToast('Pick a future time', 'error'); return; }
-
-    API.post('/reminders', {
-        family_id: currentFamilyId,
+    apiPost("/api/reminders", {
+        family_id: window.currentFamilyId,
         title: title,
         message: message,
         remind_at: remindAt,
         speak: speak
-    }).then(function() {
-        closeModal();
-        showToast('\u23F0 Reminder set! You will be notified at the scheduled time.');
-        navigateTo('shopping');
-    }).catch(function(e) { showToast(e.message, 'error'); });
+    }).then(function(data) {
+        showToast("Reminder set!", "success");
+        closeModal("addReminderModal");
+        loadShoppingData();
+    }).catch(function(err) {
+        showToast("Failed to set reminder", "error");
+    });
 }
 
-function deleteReminder(id) {
-    if (!confirm('Delete this reminder?')) return;
-    API.del('/reminders/' + id)
-        .then(function() { showToast('Reminder deleted'); navigateTo('shopping'); })
-        .catch(function(e) { showToast(e.message, 'error'); });
+function renderReminders() {
+    var list = document.getElementById("reminderList");
+    if (!list) return;
+
+    if (shopReminders.length === 0) {
+        list.innerHTML = "";
+        return;
+    }
+
+    var html = "";
+    for (var i = 0; i < shopReminders.length; i++) {
+        var r = shopReminders[i];
+        html += '<div class="reminder-item">';
+        html += '<span>⏰ ' + escapeHtml(r.title) + ' - ' + formatDateTime(r.remind_at) + '</span>';
+        html += '<button onclick="deleteReminder(' + r.id + ')" style="background:none;border:none;color:#666;cursor:pointer;font-size:16px;">✕</button>';
+        html += '</div>';
+    }
+    list.innerHTML = html;
 }
 
-// ==================== SHOPPING ITEMS ====================
-
-function addShoppingItem() {
-    var input = document.getElementById('shop-item-name');
-    var name = input.value.trim();
-    if (!name) return;
-    API.post('/shopping', { family_id: currentFamilyId, name: name, quantity: '1' })
-        .then(function() { input.value = ''; showToast('Added!'); navigateTo('shopping'); })
-        .catch(function(e) { showToast(e.message, 'error'); });
+function deleteReminder(reminderId) {
+    apiDelete("/api/reminders/" + reminderId).then(function() {
+        showToast("Reminder deleted", "info");
+        loadShoppingData();
+    }).catch(function(err) {
+        showToast("Failed to delete", "error");
+    });
 }
 
-function toggleBought(id, val) {
-    API.put('/shopping/' + id, { is_bought: val })
-        .then(function() { navigateTo('shopping'); })
-        .catch(function(e) { showToast(e.message, 'error'); });
+// ==================== TEST VOICE ====================
+
+function testVoice() {
+    if (!("speechSynthesis" in window)) {
+        showToast("Speech not supported", "error");
+        return;
+    }
+
+    window.speechSynthesis.cancel();
+
+    var msg = document.getElementById("remMessage").value || "Time for grocery shopping! Check your shopping list.";
+
+    var utterance = new SpeechSynthesisUtterance(msg);
+    utterance.lang = "en-IN";
+    utterance.rate = 0.9;
+    utterance.pitch = 1.1;
+    utterance.volume = 1.0;
+
+    // Try to find English voice
+    var voices = window.speechSynthesis.getVoices();
+    for (var i = 0; i < voices.length; i++) {
+        if (voices[i].lang.indexOf("en") === 0) {
+            utterance.voice = voices[i];
+            break;
+        }
+    }
+
+    window.speechSynthesis.speak(utterance);
+    showToast("Speaking...", "info");
 }
 
-function deleteShopItem(id) {
-    API.del('/shopping/' + id)
-        .then(function() { navigateTo('shopping'); })
-        .catch(function(e) { showToast(e.message, 'error'); });
+// ==================== NOTIFICATION PERMISSION ====================
+
+function requestNotifPermission() {
+    if (!("Notification" in window)) {
+        showToast("Notifications not supported", "error");
+        return;
+    }
+
+    if (Notification.permission === "granted") {
+        showToast("Notifications already enabled", "success");
+        updateNotifBanner();
+        updateNotifStatus();
+        // Send test notification
+        new Notification("FamilyHub", {
+            body: "Notifications are working!",
+            icon: "https://familyhub-1u10.onrender.com/icon-192.png"
+        });
+        return;
+    }
+
+    Notification.requestPermission().then(function(permission) {
+        if (permission === "granted") {
+            showToast("Notifications enabled!", "success");
+            updateNotifBanner();
+            updateNotifStatus();
+            // Send test notification
+            new Notification("FamilyHub", {
+                body: "You will now receive alerts!",
+                icon: "https://familyhub-1u10.onrender.com/icon-192.png"
+            });
+        } else {
+            showToast("Notifications blocked. Enable in phone settings.", "warning");
+        }
+    });
+}
+
+function updateNotifBanner() {
+    var banner = document.getElementById("notifBanner");
+    if (!banner) return;
+
+    if ("Notification" in window && Notification.permission === "granted") {
+        banner.classList.add("hidden");
+    } else {
+        banner.classList.remove("hidden");
+    }
+}
+
+function updateNotifStatus() {
+    var status = document.getElementById("notifPermStatus");
+    if (!status) return;
+
+    if (!("Notification" in window)) {
+        status.textContent = "Not supported";
+    } else {
+        status.textContent = Notification.permission;
+    }
+}
+
+// ==================== NOTIFICATION POLLING ====================
+
+function startNotificationPolling() {
+    // Poll for new shopping items every 8 seconds
+    setInterval(function() {
+        if (!window.currentFamilyId) return;
+
+        apiGet("/api/notifications/" + window.currentFamilyId + "/check?since_id=" + lastNotifiedId).then(function(data) {
+            if (data.new_items && data.new_items.length > 0) {
+                for (var i = 0; i < data.new_items.length; i++) {
+                    var item = data.new_items[i];
+                    showItemNotification(item.name, item.quantity);
+                    showToast("🛒 " + item.name + " added to shopping list!", "info");
+                }
+                lastNotifiedId = data.latest_id;
+                // Refresh shopping page if visible
+                var shopPage = document.getElementById("page-shopping");
+                if (shopPage && shopPage.classList.contains("active")) {
+                    loadShoppingData();
+                }
+            }
+        }).catch(function() {
+            // Silently fail - polling should not show errors
+        });
+    }, 8000);
+
+    // Poll for due reminders every 30 seconds
+    setInterval(function() {
+        if (!window.currentFamilyId) return;
+
+        apiGet("/api/reminders/" + window.currentFamilyId + "/due").then(function(data) {
+            if (data.reminders && data.reminders.length > 0) {
+                for (var i = 0; i < data.reminders.length; i++) {
+                    var reminder = data.reminders[i];
+                    showReminderAlert(reminder, data.pending_items);
+                }
+            }
+        }).catch(function() {
+            // Silently fail
+        });
+    }, 30000);
+}
+
+// ==================== SHOW ITEM NOTIFICATION ====================
+
+function showItemNotification(itemName, quantity) {
+    // Play chime sound
+    playChime();
+
+    // Vibrate
+    if (navigator.vibrate) {
+        navigator.vibrate([200, 100, 200]);
+    }
+
+    // Browser notification
+    if ("Notification" in window && Notification.permission === "granted") {
+        new Notification("🛒 New Shopping Item!", {
+            body: itemName + " (Qty: " + quantity + ")",
+            icon: "https://familyhub-1u10.onrender.com/icon-192.png",
+            tag: "shop-" + Date.now()
+        });
+    }
+
+    // Update badge
+    updateNotifBadge();
+}
+
+// ==================== SHOW REMINDER ALERT ====================
+
+function showReminderAlert(reminder, pendingItems) {
+    var overlay = document.getElementById("alertOverlay");
+    var title = document.getElementById("alertTitle");
+    var message = document.getElementById("alertMessage");
+    var itemCount = document.getElementById("alertItemCount");
+    var speaking = document.getElementById("alertSpeaking");
+
+    title.textContent = "🔔 " + reminder.title;
+    message.textContent = reminder.message;
+
+    if (pendingItems > 0) {
+        itemCount.textContent = "You have " + pendingItems + " items to buy";
+        itemCount.style.display = "block";
+    } else {
+        itemCount.style.display = "none";
+    }
+
+    overlay.style.display = "flex";
+
+    // Play urgent sound
+    playUrgentSound();
+
+    // Vibrate
+    if (navigator.vibrate) {
+        navigator.vibrate([300, 100, 300, 100, 300]);
+    }
+
+    // Speak
+    if (reminder.speak && "speechSynthesis" in window) {
+        speaking.style.display = "flex";
+
+        var speakText = reminder.message;
+        if (pendingItems > 0) {
+            speakText += " You have " + pendingItems + " items to buy.";
+        }
+
+        window.speechSynthesis.cancel();
+        var utterance = new SpeechSynthesisUtterance(speakText);
+        utterance.lang = "en-IN";
+        utterance.rate = 0.9;
+        utterance.pitch = 1.1;
+        utterance.volume = 1.0;
+
+        var voices = window.speechSynthesis.getVoices();
+        for (var i = 0; i < voices.length; i++) {
+            if (voices[i].lang.indexOf("en") === 0) {
+                utterance.voice = voices[i];
+                break;
+            }
+        }
+
+        utterance.onend = function() {
+            speaking.style.display = "none";
+        };
+
+        window.speechSynthesis.speak(utterance);
+    }
+
+    // Browser notification
+    if ("Notification" in window && Notification.permission === "granted") {
+        new Notification("⏰ " + reminder.title, {
+            body: reminder.message,
+            icon: "https://familyhub-1u10.onrender.com/icon-192.png",
+            tag: "reminder-" + reminder.id
+        });
+    }
+}
+
+function dismissAlert() {
+    var overlay = document.getElementById("alertOverlay");
+    overlay.style.display = "none";
+
+    if ("speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+    }
+}
+
+// ==================== SOUND EFFECTS ====================
+
+function playChime() {
+    try {
+        var ctx = new (window.AudioContext || window.webkitAudioContext)();
+        var notes = [523.25, 659.25, 783.99, 1046.50];
+
+        for (var i = 0; i < notes.length; i++) {
+            var osc = ctx.createOscillator();
+            var gain = ctx.createGain();
+
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+
+            osc.frequency.value = notes[i];
+            osc.type = "sine";
+
+            var startTime = ctx.currentTime + (i * 0.15);
+            gain.gain.setValueAtTime(0.3, startTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.3);
+
+            osc.start(startTime);
+            osc.stop(startTime + 0.3);
+        }
+    } catch (e) {
+        console.log("Audio error:", e);
+    }
+}
+
+function playUrgentSound() {
+    try {
+        var ctx = new (window.AudioContext || window.webkitAudioContext)();
+        var pattern = [880, 660, 880, 660, 880, 660];
+
+        for (var i = 0; i < pattern.length; i++) {
+            var osc = ctx.createOscillator();
+            var gain = ctx.createGain();
+
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+
+            osc.frequency.value = pattern[i];
+            osc.type = "square";
+
+            var startTime = ctx.currentTime + (i * 0.2);
+            gain.gain.setValueAtTime(0.2, startTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.15);
+
+            osc.start(startTime);
+            osc.stop(startTime + 0.15);
+        }
+    } catch (e) {
+        console.log("Audio error:", e);
+    }
+}
+
+// ==================== NOTIFICATION BADGE ====================
+
+function updateNotifBadge() {
+    var badge = document.getElementById("notifBadge");
+    if (!badge) return;
+
+    var count = parseInt(badge.textContent) || 0;
+    count++;
+
+    badge.textContent = count;
+    badge.style.display = "flex";
+}
+
+function openNotifications() {
+    var badge = document.getElementById("notifBadge");
+    if (badge) {
+        badge.textContent = "0";
+        badge.style.display = "none";
+    }
+
+    var modal = document.getElementById("notifPanel");
+    var list = document.getElementById("notifList");
+
+    if (!list) return;
+
+    // Show recent notifications from memory
+    if (!window.notifHistory) {
+        window.notifHistory = [];
+    }
+
+    if (window.notifHistory.length === 0) {
+        list.innerHTML = '<div class="empty-state"><p>No notifications yet</p></div>';
+    } else {
+        var html = "";
+        for (var i = window.notifHistory.length - 1; i >= 0; i--) {
+            html += '<div class="notif-item-panel">';
+            html += escapeHtml(window.notifHistory[i].message);
+            html += '<div class="notif-time">' + escapeHtml(window.notifHistory[i].time) + '</div>';
+            html += '</div>';
+        }
+        list.innerHTML = html;
+    }
+
+    modal.classList.add("open");
+}
+
+function openNotifSettings() {
+    updateNotifStatus();
+    var modal = document.getElementById("notifSettingsModal");
+    modal.classList.add("open");
+}
+
+// ==================== HELPER FUNCTIONS ====================
+
+function escapeHtml(text) {
+    if (!text) return "";
+    var div = document.createElement("div");
+    div.appendChild(document.createTextNode(text));
+    return div.innerHTML;
+}
+
+function formatDateTime(dateStr) {
+    if (!dateStr) return "";
+    try {
+        var d = new Date(dateStr);
+        var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        var month = months[d.getMonth()];
+        var day = d.getDate();
+        var hours = d.getHours();
+        var mins = d.getMinutes();
+        var ampm = hours >= 12 ? "PM" : "AM";
+        hours = hours % 12;
+        hours = hours ? hours : 12;
+        mins = mins < 10 ? "0" + mins : mins;
+        return month + " " + day + ", " + hours + ":" + mins + " " + ampm;
+    } catch (e) {
+        return dateStr;
+    }
 }
